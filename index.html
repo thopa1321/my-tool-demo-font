@@ -122,8 +122,7 @@
 
   .mock-root{font-family:var(--body-font,'Inter');color:#1d1b1a;text-transform:var(--body-tt,none)}
   .mock-root h1,.mock-root h2,.mock-root h3,.mock-root .display{font-family:var(--head-font,'Inter');text-transform:var(--title-tt,none)}
-  .af-cta,.pk-play,.to-fbtn,.en-play,.btn-p{font-family:var(--cta-font,var(--head-font));text-transform:var(--cta-tt,none)}
-  .btn-s,.snd,.af-vip,.en-q span,.ph-nav span{font-family:var(--button-font,var(--cta-font,var(--head-font)));text-transform:var(--button-tt,none)}
+  .mock-root .af-cta,.mock-root .pk-play,.mock-root .to-fbtn,.mock-root .en-play,.mock-root .btn-p,.mock-root .btn-s,.mock-root .snd,.mock-root .af-vip,.mock-root .en-q span,.mock-root .ph-nav span{font-family:var(--cta-font,var(--head-font));text-transform:var(--cta-tt,none)}
   .af-card,.pk-tile,.pe-pcard,.to-feat,.en-card,.hero-card,.listitem,.feat,.gtile{font-family:var(--card-font,var(--body-font));text-transform:var(--card-tt,none)}
   .phone{width:392px;max-width:100%;border:1px solid #e7e3dc;border-radius:34px;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.08);overflow:hidden}
   .phone .status{display:flex;justify-content:space-between;padding:14px 22px 4px;font-size:.72em;color:#8a857d;font-weight:600}
@@ -425,8 +424,6 @@
       <div class="seg" data-role="title"><button data-cs="none" aria-pressed="true">Aa</button><button data-cs="upper" aria-pressed="false">HOA</button><button data-cs="lower" aria-pressed="false">thường</button></div></div>
     <div class="prsel"><span>CTA</span><select id="prCta"></select>
       <div class="seg" data-role="cta"><button data-cs="none" aria-pressed="true">Aa</button><button data-cs="upper" aria-pressed="false">HOA</button><button data-cs="lower" aria-pressed="false">thường</button></div></div>
-    <div class="prsel"><span>Button</span><select id="prButton"></select>
-      <div class="seg" data-role="button"><button data-cs="none" aria-pressed="true">Aa</button><button data-cs="upper" aria-pressed="false">HOA</button><button data-cs="lower" aria-pressed="false">thường</button></div></div>
     <div class="prsel"><span>Card</span><select id="prCard"></select>
       <div class="seg" data-role="card"><button data-cs="none" aria-pressed="true">Aa</button><button data-cs="upper" aria-pressed="false">HOA</button><button data-cs="lower" aria-pressed="false">thường</button></div></div>
     <div class="prsel"><span>Text còn lại</span><select id="prBody"></select>
@@ -646,7 +643,7 @@ const CATALOG=CATALOG_RAW.map(([code,label,en,sk])=>{const S=SCRIPTS[sk]||SCRIPT
   return {code,label,en,needs:S.needs,dir:S.dir||"ltr",sample:S.sample};});
 
 /* ===== state ===== */
-const state={fontQuery:"",langs:["en","vi"],langOn:new Set(["en","vi"]),viewLang:"en",dir:"ltr",selected:["Inter"],tpl:"filter",scale:1,case:{title:"none",cta:"none",button:"none",card:"none",body:"none"},pair:{title:"Inter",cta:"Inter",button:"Inter",card:"Inter",body:"Inter"},customFonts:[]};
+const state={fontQuery:"",langs:["en","vi"],langOn:new Set(["en","vi"]),viewLang:"en",dir:"ltr",selected:["Inter"],tpl:"filter",scale:1,case:{title:"none",cta:"none",card:"none",body:"none"},pair:{title:"Inter",cta:"Inter",card:"Inter",body:"Inter"},customFonts:[]};
 const loaded=new Set();
 const ALL_LANG=BASE_LANGS.concat(CATALOG);
 
@@ -778,17 +775,17 @@ function doPasteLangs(){const raw=$("#pasteLangs").value;if(!raw.trim()){toast("
 $("#pasteAdd").onclick=doPasteLangs;
 $("#pasteLangs").addEventListener("keydown",e=>{if(e.key==="Enter")doPasteLangs();});
 
-/* ===== stage: một preview dùng bộ font ghép (Title/CTA/Text) ===== */
-function validPair(){const sel=state.selected;if(!sel.length)return;["title","cta","button","card","body"].forEach(r=>{if(!sel.includes(state.pair[r]))state.pair[r]=sel[0];});}
-function roleFonts(){return [["Title",state.pair.title],["CTA",state.pair.cta],["Button",state.pair.button],["Card",state.pair.card],["Text",state.pair.body]];}
+/* ===== stage: một preview dùng bộ font ghép (Title/Button/Card/Text) ===== */
+function validPair(){const sel=state.selected;if(!sel.length)return;["title","cta","card","body"].forEach(r=>{if(!sel.includes(state.pair[r]))state.pair[r]=sel[0];});}
+function roleFonts(){return [["Title",state.pair.title],["CTA",state.pair.cta],["Card",state.pair.card],["Text",state.pair.body]];}
 function ttv(c){return c==="upper"?"uppercase":c==="lower"?"lowercase":"none";}
-function caseVars(){const c=state.case;return `--title-tt:${ttv(c.title)};--cta-tt:${ttv(c.cta)};--button-tt:${ttv(c.button)};--card-tt:${ttv(c.card)};--body-tt:${ttv(c.body)}`;}
+function caseVars(){const c=state.case;return `--title-tt:${ttv(c.title)};--cta-tt:${ttv(c.cta)};--card-tt:${ttv(c.card)};--body-tt:${ttv(c.body)}`;}
 function renderStage(){const box=$("#stage");
   if(!state.selected.length){box.innerHTML=`<div class="stage-empty"><b>Chưa có font nào</b>Gõ tên font hoặc dán link Google Fonts ở ô “Thêm font” phía trên để bắt đầu.</div>`;return;}
   validPair();
   const L=curLang(),B=langBundle(L),dir=L.dir||"ltr";
   const onL=onLangs();
-  [state.pair.title,state.pair.cta,state.pair.button,state.pair.card,state.pair.body].forEach(n=>loadAnyFont(fontObj(n)));
+  [state.pair.title,state.pair.cta,state.pair.card,state.pair.body].forEach(n=>loadAnyFont(fontObj(n)));
   /* note: từng vai trò (font) có đáp ứng ngôn ngữ đang chọn không */
   const seen=new Set();let lines="";
   roleFonts().forEach(([role,name])=>{const f=fontObj(name);if(!f)return;if(seen.has(name+role))return;seen.add(name+role);
@@ -800,11 +797,11 @@ function renderStage(){const box=$("#stage");
       ? `<div class="note-sum neutral">• <b>${esc(role)}</b> — ${esc(name)}: đang tải/kiểm tra…</div>`
       : `<div class="note-sum ok">• <b>${esc(role)}</b> — ${esc(name)} đáp ứng đủ ${onL.length} ngôn ngữ.</div>`;});
   const note=`<div class="demo-note">${lines||'<span class="vl-hint">Chưa chọn ngôn ngữ.</span>'}</div>`;
-  const rootStyle=`--head-font:${famStr(state.pair.title)};--cta-font:${famStr(state.pair.cta)};--button-font:${famStr(state.pair.button)};--card-font:${famStr(state.pair.card)};--body-font:${famStr(state.pair.body)};${caseVars()};font-size:${16*state.scale}px`;
+  const rootStyle=`--head-font:${famStr(state.pair.title)};--cta-font:${famStr(state.pair.cta)};--card-font:${famStr(state.pair.card)};--body-font:${famStr(state.pair.body)};${caseVars()};font-size:${16*state.scale}px`;
   const tpl=(TPL[state.tpl]||tplFilter)(B);
   box.innerHTML=`<div class="demo pair">
     <div class="demo-head">
-      <div class="dn">🧩 Preview ghép font<span>Title: ${esc(state.pair.title)} · CTA: ${esc(state.pair.cta)} · Button: ${esc(state.pair.button)} · Card: ${esc(state.pair.card)} · Text: ${esc(state.pair.body)}</span></div>
+      <div class="dn">🧩 Preview ghép font<span>Title: ${esc(state.pair.title)} · CTA: ${esc(state.pair.cta)} · Card: ${esc(state.pair.card)} · Text: ${esc(state.pair.body)}</span></div>
       <div class="demo-actions"><button data-act="zoompair">⤢ Phóng to</button><button data-act="copypair">⧉ Code</button></div>
     </div>${note}
     <div class="demo-body"><div class="mock-root" dir="${dir}" style="${rootStyle}">${tpl}</div></div>
@@ -821,9 +818,9 @@ function closeZoom(){$("#zoom").classList.remove("open");$("#zoom").setAttribute
 function renderZoom(){const L=curLang(),B=langBundle(L),dir=L.dir||"ltr";
   const z=+$("#zoomScale").value/100;let rootStyle;
   if(zoomMode==="pair"){validPair();const sel=state.selected,opt=cur=>sel.map(n=>`<option value="${esc(n)}"${n===cur?" selected":""}>${esc(n)}</option>`).join("");
-    [state.pair.title,state.pair.cta,state.pair.button,state.pair.card,state.pair.body].forEach(n=>loadAnyFont(fontObj(n)));
-    $("#zoomFonts").innerHTML=`<label class="zpr">Title<select data-zpr="title">${opt(state.pair.title)}</select></label><label class="zpr">CTA<select data-zpr="cta">${opt(state.pair.cta)}</select></label><label class="zpr">Button<select data-zpr="button">${opt(state.pair.button)}</select></label><label class="zpr">Card<select data-zpr="card">${opt(state.pair.card)}</select></label><label class="zpr">Text<select data-zpr="body">${opt(state.pair.body)}</select></label>`;
-    rootStyle=`--head-font:${famStr(state.pair.title)};--cta-font:${famStr(state.pair.cta)};--button-font:${famStr(state.pair.button)};--card-font:${famStr(state.pair.card)};--body-font:${famStr(state.pair.body)};${caseVars()};font-size:16px;zoom:${z}`;
+    [state.pair.title,state.pair.cta,state.pair.card,state.pair.body].forEach(n=>loadAnyFont(fontObj(n)));
+    $("#zoomFonts").innerHTML=`<label class="zpr">Title<select data-zpr="title">${opt(state.pair.title)}</select></label><label class="zpr">CTA<select data-zpr="cta">${opt(state.pair.cta)}</select></label><label class="zpr">Card<select data-zpr="card">${opt(state.pair.card)}</select></label><label class="zpr">Text<select data-zpr="body">${opt(state.pair.body)}</select></label>`;
+    rootStyle=`--head-font:${famStr(state.pair.title)};--cta-font:${famStr(state.pair.cta)};--card-font:${famStr(state.pair.card)};--body-font:${famStr(state.pair.body)};${caseVars()};font-size:16px;zoom:${z}`;
   }else{const name=zoomFont,f=fontObj(name);if(!f)return;loadAnyFont(f);
     $("#zoomFonts").innerHTML=state.selected.map(n=>`<button class="zf ${n===name?'act':''}" data-zf="${esc(n)}">${esc(n)}</button>`).join("");
     rootStyle=`--head-font:${famStr(name)};--body-font:${famStr(name)};font-size:16px;zoom:${z}`;}
@@ -989,10 +986,10 @@ function copyCode(name,btn){const f=fontObj(name)||{n:name,w:[400,700],cat:"sans
   const url=`https://fonts.googleapis.com/css2?family=${famParam(f.n)}:wght@${f.w.join(";")}&display=swap`;
   const txt=`<!-- ${f.n} -->\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="${url}" rel="stylesheet">\n\n/* CSS */\nfont-family: '${f.n}', ${FALLBACK[f.cat||'sans']};`;
   navigator.clipboard.writeText(txt).then(()=>{toast(`Đã copy code cho "${f.n}"`);if(btn){const o=btn.textContent;btn.textContent="✓ Đã copy";setTimeout(()=>btn.textContent=o,1400);}});}
-function copyPair(btn){const uniq=[...new Set([state.pair.title,state.pair.cta,state.pair.button,state.pair.card,state.pair.body])];
+function copyPair(btn){const uniq=[...new Set([state.pair.title,state.pair.cta,state.pair.card,state.pair.body])];
   const links=uniq.map(n=>{const f=fontObj(n)||{n,w:[400,700]};return `<link href="https://fonts.googleapis.com/css2?family=${famParam(n)}:wght@${(f.w||[400,700]).join(";")}&display=swap" rel="stylesheet">`;}).join("\n");
   const ff=n=>{const f=fontObj(n);return `'${n}', ${f?FALLBACK[f.cat]:'sans-serif'}`;};
-  const txt=`<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n${links}\n\n/* CSS — ghép font */\n--title-font: ${ff(state.pair.title)};\n--cta-font: ${ff(state.pair.cta)};\n--button-font: ${ff(state.pair.button)};\n--card-font: ${ff(state.pair.card)};\n--body-font: ${ff(state.pair.body)};`;
+  const txt=`<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n${links}\n\n/* CSS — ghép font */\n--title-font: ${ff(state.pair.title)};\n--cta-font: ${ff(state.pair.cta)};\n--card-font: ${ff(state.pair.card)};\n--body-font: ${ff(state.pair.body)};`;
   navigator.clipboard.writeText(txt).then(()=>{toast("Đã copy code bộ font ghép");if(btn){const o=btn.textContent;btn.textContent="✓ Đã copy";setTimeout(()=>btn.textContent=o,1400);}});}
 
 /* ===== controls ===== */
@@ -1037,12 +1034,11 @@ $("#fontChips").addEventListener("click",e=>{const x=e.target.closest("[data-rmf
   state.selected=state.selected.filter(n=>n!==x.dataset.rmf);validPair();renderAll();});
 function buildPairSelects(){validPair();const sel=state.selected;
   const opt=cur=>sel.map(n=>`<option value="${esc(n)}"${n===cur?" selected":""}>${esc(n)}</option>`).join("");
-  $("#prTitle").innerHTML=opt(state.pair.title);$("#prCta").innerHTML=opt(state.pair.cta);$("#prButton").innerHTML=opt(state.pair.button);$("#prCard").innerHTML=opt(state.pair.card);$("#prBody").innerHTML=opt(state.pair.body);
+  $("#prTitle").innerHTML=opt(state.pair.title);$("#prCta").innerHTML=opt(state.pair.cta);$("#prCard").innerHTML=opt(state.pair.card);$("#prBody").innerHTML=opt(state.pair.body);
   syncCaseSegs();}
 function syncCaseSegs(){document.querySelectorAll("#pairRow .seg").forEach(seg=>{const cur=state.case[seg.dataset.role]||"none";[...seg.children].forEach(b=>b.setAttribute("aria-pressed",b.dataset.cs===cur?"true":"false"));});}
 $("#prTitle").onchange=e=>{state.pair.title=e.target.value;renderStage();};
 $("#prCta").onchange=e=>{state.pair.cta=e.target.value;renderStage();};
-$("#prButton").onchange=e=>{state.pair.button=e.target.value;renderStage();};
 $("#prCard").onchange=e=>{state.pair.card=e.target.value;renderStage();};
 $("#prBody").onchange=e=>{state.pair.body=e.target.value;renderStage();};
 
