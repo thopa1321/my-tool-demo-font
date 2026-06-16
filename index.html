@@ -81,7 +81,7 @@
   /* panel chọn ngôn ngữ */
   .langpanel{margin-top:11px;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:14px;display:none}
   .langpanel.open{display:block}
-  .langstatus{margin:14px 0 4px;margin-left:140px;font-size:13px;border-radius:9px;padding:10px 14px;display:none;line-height:1.45}
+  .langstatus{margin:14px 0 4px;margin-left:140px;font-size:13px;border-radius:9px;padding:10px 14px;display:none;line-height:1.45;background:var(--chip);color:var(--muted);border:1px solid var(--line)}
   .langstatus.err{background:var(--accent-soft);color:var(--accent-ink);border:1px solid var(--accent)}
   .langstatus.ok{background:var(--ok-soft);color:var(--ok);border:1px solid transparent}
   .langpanel .ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
@@ -652,8 +652,10 @@ function fontObj(n){return allFonts().find(f=>f.n===n);}
 function famStr(n){const f=fontObj(n);return `'${n}', ${f?FALLBACK[f.cat]:'sans-serif'}`;}
 function gfLink(n){return `https://fonts.google.com/specimen/${famParam(n)}`;}
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),1900);}
-function loadFont(f){if(!f||loaded.has(f.n))return;loaded.add(f.n);const l=document.createElement("link");l.rel="stylesheet";l.href=`https://fonts.googleapis.com/css2?family=${famParam(f.n)}:wght@${f.w.join(";")}&display=swap`;document.head.appendChild(l);}
-function loadCustomFont(name){const k="__c_"+name;if(loaded.has(k))return;loaded.add(k);[400,700].forEach(wt=>{const l=document.createElement("link");l.rel="stylesheet";l.href=`https://fonts.googleapis.com/css2?family=${famParam(name)}:wght@${wt}&display=swap`;document.head.appendChild(l);});}
+const fontReady=new Set();
+function _markReady(name){fontReady.add(name);if(typeof supCache!=="undefined"){for(const k of[...supCache.keys()])if(k.indexOf(name+"|")===0)supCache.delete(k);}if(typeof _supRerender==="function")_supRerender();}
+function loadFont(f){if(!f||loaded.has(f.n))return;loaded.add(f.n);const l=document.createElement("link");l.rel="stylesheet";l.href=`https://fonts.googleapis.com/css2?family=${famParam(f.n)}:wght@${f.w.join(";")}&display=swap`;l.onload=()=>_markReady(f.n);l.onerror=()=>_markReady(f.n);document.head.appendChild(l);}
+function loadCustomFont(name){const k="__c_"+name;if(loaded.has(k))return;loaded.add(k);let done=0;[400,700].forEach(wt=>{const l=document.createElement("link");l.rel="stylesheet";l.href=`https://fonts.googleapis.com/css2?family=${famParam(name)}:wght@${wt}&display=swap`;l.onload=()=>{if(++done)_markReady(name);};l.onerror=()=>_markReady(name);document.head.appendChild(l);});}
 function loadAnyFont(f){if(!f)return;f.custom?loadCustomFont(f.n):loadFont(f);}
 function parseFontInput(str){str=(str||"").trim();if(!str)return"";let m=str.match(/(?:[?&]|selection\.)family=([^&]+)/i);if(m){let f=decodeURIComponent(m[1]).split(":")[0];return f.replace(/\+/g," ").trim();}m=str.match(/fonts\.google\.com\/specimen\/([^/?#]+)/i);if(m)return decodeURIComponent(m[1]).replace(/\+/g," ").trim();return str.replace(/\s+/g," ").trim();}
 function addCustomFont(name){const ex=allFonts().find(f=>f.n.toLowerCase()===name.toLowerCase());if(ex)return ex;const f={n:name,cat:"sans",s:[],w:[400,700],custom:true};state.customFonts.push(f);loadCustomFont(name);return f;}
@@ -662,7 +664,29 @@ function langDef(code){return ALL_LANG.find(l=>l.code===code);}
 function langName(d){return d?(d.en||d.label):"";}
 function onLangs(){return state.langs.filter(c=>state.langOn.has(c)).map(langDef).filter(Boolean);}
 function curLang(){const on=onLangs();if(state.viewLang&&state.langOn.has(state.viewLang)){const d=langDef(state.viewLang);if(d)return d;}return on[0]||langDef(state.langs[0])||BASE_LANGS[0];}
-function fontSupportsLang(f,def){if(!f||!def)return false;if(f.custom)return null;if(!def.needs||def.needs==="latin")return true;return f.s.includes(def.needs);}
+const TESTCHAR={"latin-ext":"ğ",vietnamese:"ệ",cyrillic:"Я","cyrillic-ext":"ґ",greek:"Ω","greek-ext":"ᾶ",arabic:"ش",hebrew:"א",devanagari:"क",bengali:"ক",gurmukhi:"ਕ",gujarati:"ક",tamil:"க",telugu:"క",kannada:"ಕ",malayalam:"ക",sinhala:"ක",thai:"ก",lao:"ກ",khmer:"ក",myanmar:"က",georgian:"ა",armenian:"Ա",ethiopic:"ሀ",oriya:"କ",thaana:"ހ",japanese:"あ",korean:"가","chinese-simplified":"汉","chinese-traditional":"漢"};
+/* pixel-test dự phòng khi không có FontFaceSet */
+const _gcanvas=document.createElement("canvas");_gcanvas.width=72;_gcanvas.height=72;
+const _gctx=_gcanvas.getContext("2d",{willReadFrequently:true});
+function _drawGlyph(font,ch){_gctx.clearRect(0,0,72,72);_gctx.fillStyle="#000";_gctx.textBaseline="top";_gctx.font="52px "+font;_gctx.fillText(ch,2,2);return _gctx.getImageData(0,0,72,72).data;}
+function glyphSupported(family,ch){const a=_drawGlyph('"'+String(family).replace(/"/g,"")+'", monospace',ch),b=_drawGlyph("monospace",ch);
+  for(let i=3;i<a.length;i+=4){if(a[i]!==b[i])return true;}return false;}
+/* nguồn chính: unicode-range thật của font qua document.fonts */
+const supCache=new Map(),supPending=new Set();
+function _supRerender(){clearTimeout(_supRerender._t);_supRerender._t=setTimeout(()=>{if($("#langStatus")){renderLangStatus();renderStage();}},70);}
+function fontSupportsLang(f,def){if(!f||!def)return false;
+  if(!def.needs||def.needs==="latin")return true;
+  const ch=TESTCHAR[def.needs];if(!ch)return f.custom?null:f.s.includes(def.needs);
+  if(!fontReady.has(f.n))return null;
+  const key=f.n+"|"+def.needs;
+  if(supCache.has(key))return supCache.get(key);
+  if(window.FontFace&&document.fonts&&document.fonts.load){
+    if(!supPending.has(key)){supPending.add(key);
+      document.fonts.load(`52px "${f.n}"`,ch).then(()=>{let ok;try{ok=document.fonts.check(`52px "${f.n}"`,ch);}catch(e){ok=glyphSupported(f.n,ch);}
+        supCache.set(key,!!ok);supPending.delete(key);_supRerender();})
+        .catch(()=>{supCache.set(key,glyphSupported(f.n,ch));supPending.delete(key);_supRerender();});}
+    return null;}
+  const r=f.custom?glyphSupported(f.n,ch):f.s.includes(def.needs);supCache.set(key,r);return r;}
 function langBundle(def){if(def.b)return def.b;const t=def.sample||def.label;const head=(t.split(/[.!?。]/)[0]||t).trim();
   return {title:head.slice(0,18)||t.slice(0,18),tag:t.slice(0,64),sec:head.slice(0,16)||t.slice(0,16),body:t,nav:["Home","Search","Profile"],b1:"Start",b2:"More",stat:"views",list:[[t.slice(0,18),"—","12.4K"],[t.slice(0,14),"—","248"],[t.slice(0,20),"—","On"]],eyebrow:head.slice(0,16),feat:[[head.slice(0,10),"—",t.slice(0,42)],[head.slice(0,10),"—",t.slice(0,42)],[head.slice(0,10),"—",t.slice(0,42)]]};}
 
@@ -743,11 +767,13 @@ function renderStage(){const box=$("#stage");
   [state.pair.title,state.pair.cta,state.pair.body].forEach(n=>loadAnyFont(fontObj(n)));
   /* note: từng vai trò (font) có đáp ứng ngôn ngữ đang chọn không */
   const seen=new Set();let lines="";
-  roleFonts().forEach(([role,name])=>{const f=fontObj(name);if(!f)return;const key=role+name;if(seen.has(name+role))return;seen.add(name+role);
-    if(f.custom){lines+=`<div class="note-sum neutral">• <b>${esc(role)}</b> — ${esc(name)}: font tùy chỉnh, chưa rõ subset.</div>`;return;}
+  roleFonts().forEach(([role,name])=>{const f=fontObj(name);if(!f)return;if(seen.has(name+role))return;seen.add(name+role);
     const miss=onL.filter(d=>fontSupportsLang(f,d)===false).map(d=>langName(d));
-    lines+=miss.length
+    const pending=onL.some(d=>fontSupportsLang(f,d)===null);
+    lines+= miss.length
       ? `<div class="note-sum no">• <b>${esc(role)}</b> — ${esc(name)} KHÔNG đáp ứng: <b>${miss.map(esc).join(", ")}</b></div>`
+      : pending
+      ? `<div class="note-sum neutral">• <b>${esc(role)}</b> — ${esc(name)}: đang tải/kiểm tra…</div>`
       : `<div class="note-sum ok">• <b>${esc(role)}</b> — ${esc(name)} đáp ứng đủ ${onL.length} ngôn ngữ.</div>`;});
   const note=`<div class="demo-note">${lines||'<span class="vl-hint">Chưa chọn ngôn ngữ.</span>'}</div>`;
   const rootStyle=`--head-font:${famStr(state.pair.title)};--cta-font:${famStr(state.pair.cta)};--body-font:${famStr(state.pair.body)};font-size:${16*state.scale}px`;
@@ -956,17 +982,18 @@ $("#themeBtn").onclick=()=>{const c=document.documentElement.getAttribute("data-
 function renderLangStatus(){const el=$("#langStatus");
   if(!state.selected.length){el.style.display="none";return;}
   const defs=onLangs();
-  if(!defs.length){el.style.display="block";el.className="langstatus";el.innerHTML="";el.style.display="none";return;}
-  const issues=[];let hasCustom=false;
+  if(!defs.length){el.style.display="none";return;}
+  const issues=[];let pending=false;
   state.selected.forEach(name=>{const f=fontObj(name);if(!f)return;
-    if(f.custom){hasCustom=true;return;}
     const miss=defs.filter(d=>fontSupportsLang(f,d)===false).map(d=>langName(d));
+    if(defs.some(d=>fontSupportsLang(f,d)===null))pending=true;
     if(miss.length)issues.push(`<b>${esc(name)}</b> → ${miss.map(esc).join(", ")}`);});
   el.style.display="block";
   if(issues.length){el.className="langstatus err";
-    el.innerHTML=`⚠ Font đang chọn không hiển thị được: ${issues.join(" · ")}.${hasCustom?' (Font tùy chỉnh: chưa rõ subset.)':''}`;}
+    el.innerHTML=`⚠ Font đang chọn không hiển thị được: ${issues.join(" · ")}.${pending?' (Đang tải/kiểm tra font tùy chỉnh…)':''}`;}
+  else if(pending){el.className="langstatus";el.innerHTML=`⏳ Đang tải & kiểm tra font tùy chỉnh… (nhìn trực tiếp preview để chắc chắn).`;}
   else{el.className="langstatus ok";
-    el.innerHTML=`✓ Font đang chọn đáp ứng đủ ${defs.length} ngôn ngữ đang chọn.${hasCustom?' (Trừ font tùy chỉnh chưa rõ subset.)':''}`;}}
+    el.innerHTML=`✓ Font đang chọn đáp ứng đủ ${defs.length} ngôn ngữ đang chọn.`;}}
 
 function renderViewLangs(){const el=$("#viewLangs");const on=onLangs();
   if(!on.length){el.innerHTML=`<span class="vl-hint">Chưa có ngôn ngữ nào đang bật — bấm chip ngôn ngữ ở trên để bật.</span>`;return;}
@@ -995,6 +1022,7 @@ $("#prBody").onchange=e=>{state.pair.body=e.target.value;renderStage();};
 function renderAll(){renderFontChips();buildPairSelects();buildLangChips();renderLangStatus();renderViewLangs();renderStage();}
 
 /* ===== init ===== */
+if(document.fonts&&document.fonts.addEventListener){document.fonts.addEventListener("loadingdone",()=>{if($("#langStatus")){renderLangStatus();renderStage();}});}
 loadAnyFont(fontObj("Inter"));
 renderAll();
 </script>
