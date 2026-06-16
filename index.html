@@ -121,7 +121,7 @@
   .demo-body{padding:24px;display:flex;justify-content:center;overflow:auto;background:linear-gradient(0deg,var(--line-soft),transparent)}
 
   .mock-root{font-family:var(--body-font,'Inter');color:#1d1b1a;text-transform:var(--body-tt,none)}
-  .mock-root h1,.mock-root h2,.mock-root h3,.mock-root .display{font-family:var(--head-font,'Inter');text-transform:var(--title-tt,none)}
+  .mock-root h1,.mock-root h2,.mock-root h3,.mock-root .display,.mock-root .greet,.mock-root .nm,.mock-root .logo{font-family:var(--head-font,'Inter');text-transform:var(--title-tt,none)}
   .mock-root .af-cta,.mock-root .pk-play,.mock-root .to-fbtn,.mock-root .en-play,.mock-root .btn-p,.mock-root .btn-s,.mock-root .snd,.mock-root .af-vip,.mock-root .en-q span,.mock-root .ph-nav span{font-family:var(--cta-font,var(--head-font));text-transform:var(--cta-tt,none)}
   .af-card,.pk-tile,.pe-pcard,.to-feat,.en-card,.hero-card,.listitem,.feat,.gtile{font-family:var(--card-font,var(--body-font));text-transform:var(--card-tt,none)}
   .phone{width:392px;max-width:100%;border:1px solid #e7e3dc;border-radius:34px;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.08);overflow:hidden}
@@ -690,7 +690,7 @@ function fontCoversCp(name,cp){const faces=fontFaces(name);if(faces===null)retur
 function hasSubsetSig(name,sig){const faces=fontFaces(name);if(faces===null)return null;
   return faces.some(u=>u.toUpperCase().replace(/\s+/g,"").indexOf(sig)>=0);}
 /* ký tự đại diện (codepoint) nằm trong dải subset tương ứng của Google */
-const TESTCP={"latin-ext":0x011F,cyrillic:0x042F,"cyrillic-ext":0x0491,greek:0x03A9,"greek-ext":0x1F70,arabic:0x0634,hebrew:0x05D0,devanagari:0x0915,bengali:0x0995,gurmukhi:0x0A15,gujarati:0x0A95,tamil:0x0B95,telugu:0x0C15,kannada:0x0C95,malayalam:0x0D15,sinhala:0x0D9A,thai:0x0E01,lao:0x0E81,khmer:0x1780,myanmar:0x1000,georgian:0x10D0,armenian:0x0531,ethiopic:0x1200,oriya:0x0B15,thaana:0x0780,japanese:0x3042,korean:0xAC00,"chinese-simplified":0x6C49,"chinese-traditional":0x6F22};
+const TESTCP={"latin-ext":0x011F,cyrillic:0x042F,"cyrillic-ext":0x0500,greek:0x03A9,"greek-ext":0x1F70,arabic:0x0634,hebrew:0x05D0,devanagari:0x0915,bengali:0x0995,gurmukhi:0x0A15,gujarati:0x0A95,tamil:0x0B95,telugu:0x0C15,kannada:0x0C95,malayalam:0x0D15,sinhala:0x0D9A,thai:0x0E01,lao:0x0E81,khmer:0x1780,myanmar:0x1000,georgian:0x10D0,armenian:0x0531,ethiopic:0x1200,oriya:0x0B15,thaana:0x0780,japanese:0x3042,korean:0xAC00,"chinese-simplified":0x6C49,"chinese-traditional":0x6F22};
 function fontSupportsLang(f,def){if(!f||!def)return false;
   if(!fontReady.has(f.n))return null;
   const need=def.needs||"latin";
