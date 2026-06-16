@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Type Studio — Thử font Google trên UI thật</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBFAF8;--surface:#FFFFFF;--ink:#161514;--muted:#76716A;
+    --line:#E7E3DC;--line-soft:#F0ECE5;--accent:#D62828;--accent-soft:#FBEAE9;--accent-ink:#8E1B1B;
+    --chip:#F4F1EB;--ok:#1A7F4B;--ok-soft:#E8F5EE;--shadow:0 1px 2px rgba(20,18,16,.04),0 8px 24px rgba(20,18,16,.05);
+    --ui:'Nunito',system-ui,sans-serif;--display:'Baloo 2','Nunito',sans-serif;--mono:'JetBrains Mono',monospace;
+  }
+  [data-theme="dark"]{
+    --paper:#141312;--surface:#1D1B1A;--ink:#F2EFE9;--muted:#9C958B;
+    --line:#2E2B28;--line-soft:#26231F;--accent:#F05545;--accent-soft:#2A1715;--accent-ink:#F8A89E;
+    --chip:#26231F;--ok:#5BD08C;--ok-soft:#14241B;--shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--paper);color:var(--ink);font-family:var(--ui);line-height:1.5;-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
+  ::selection{background:var(--accent);color:#fff}
+  button{font-family:inherit}
+
+  header{border-bottom:1px solid var(--line)}
+  .masthead{max-width:1280px;margin:0 auto;padding:30px 28px 20px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
+  .brand .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--accent);font-weight:500;margin-bottom:8px}
+  .brand h1{font-family:var(--display);font-weight:700;font-size:clamp(26px,4vw,46px);line-height:1;letter-spacing:-.01em}
+  .brand h1 em{font-style:normal;color:var(--accent)}
+  .brand p{color:var(--muted);max-width:48ch;margin-top:9px;font-size:14px}
+  .icon-btn{width:42px;height:42px;border:1px solid var(--line);background:var(--surface);border-radius:50%;cursor:pointer;color:var(--ink);font-size:17px;display:grid;place-items:center;transition:.18s}
+  .icon-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+  .controls{border-bottom:1px solid var(--line);background:var(--paper)}
+  .controls-inner{max-width:1280px;margin:0 auto;padding:15px 28px}
+  .ctl-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .ctl-row+.ctl-row{margin-top:15px}
+  .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);white-space:nowrap;min-width:128px;flex:none}
+
+  /* ô thêm font gộp + gợi ý */
+  .fontbox{position:relative;flex:1;min-width:260px;max-width:440px}
+  .fontbox .inwrap{position:relative}
+  .fontbox svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+  .fontbox input{width:100%;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:11px 96px 11px 40px;font-family:var(--ui);font-size:14px;transition:.18s}
+  .fontbox input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .fontbox .addbtn{position:absolute;right:6px;top:6px;bottom:6px;border:none;background:var(--accent);color:#fff;border-radius:8px;padding:0 14px;font-size:13px;font-weight:600;cursor:pointer}
+  .suggest{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;z-index:60;display:none}
+  .suggest.show{display:block}
+  .suggest .sitem{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--line-soft)}
+  .suggest .sitem:last-child{border-bottom:none}
+  .suggest .sitem:hover,.suggest .sitem.active{background:var(--accent-soft)}
+  .suggest .sn{font-size:14px;font-weight:500}
+  .suggest .sc{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  .suggest .slink{padding:11px 14px;font-size:13px;color:var(--accent);border-top:1px dashed var(--line)}
+
+  .chips{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .lchip{display:inline-flex;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:999px;overflow:hidden;transition:.16s}
+  .lchip .pl{padding:7px 6px 7px 13px;font-size:13px;color:var(--ink);cursor:pointer;white-space:nowrap}
+  .lchip .x{padding:7px 11px 7px 4px;font-size:11px;color:var(--muted);cursor:pointer}
+  .lchip .x:hover{color:var(--accent)}
+  .lchip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent)}
+  .lchip[aria-pressed="true"] .pl,.lchip[aria-pressed="true"] .x{color:#fff}
+  .lchip[aria-pressed="false"]{background:var(--surface);opacity:.78}
+  .lchip.vn[aria-pressed="false"]{border-color:var(--accent)}.lchip.vn[aria-pressed="false"] .pl{color:var(--accent)}
+  .lchip.struck .pl{text-decoration:line-through;opacity:.55}
+  .chip-add{border:1px dashed var(--accent);color:var(--accent);background:none;border-radius:999px;font-size:13px;padding:7px 13px;cursor:pointer;transition:.16s}
+  .chip-add:hover{background:var(--accent-soft)}
+
+  select{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:9px 12px;font-family:var(--ui);font-size:14px;cursor:pointer}
+  select:focus{outline:none;border-color:var(--accent)}
+  .slider-wrap{display:flex;align-items:center;gap:10px}
+  input[type=range]{accent-color:var(--accent);width:120px}
+  .size-val{font-family:var(--mono);font-size:12px;color:var(--ink);min-width:42px}
+  .btn-sm{border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13px;padding:8px 13px;border-radius:9px;cursor:pointer;transition:.15s}
+  .btn-sm:hover{border-color:var(--accent);color:var(--accent)}
+  .btn-sm.primary{border-color:var(--accent);color:var(--accent)}
+
+  /* panel chọn ngôn ngữ */
+  .langpanel{margin-top:11px;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:14px;display:none}
+  .langpanel.open{display:block}
+  .langstatus{margin:14px 0 4px;margin-left:140px;font-size:13px;border-radius:9px;padding:10px 14px;display:none;line-height:1.45}
+  .langstatus.err{background:var(--accent-soft);color:var(--accent-ink);border:1px solid var(--accent)}
+  .langstatus.ok{background:var(--ok-soft);color:var(--ok);border:1px solid transparent}
+  .langpanel .ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .langpanel .ph .t{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .lgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;max-height:240px;overflow:auto}
+  .paste-row{display:flex;gap:8px;margin-bottom:12px}
+  .paste-row input{flex:1;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:9px;padding:10px 13px;font-family:var(--ui);font-size:13.5px}
+  .paste-row input:focus{outline:none;border-color:var(--accent)}
+  .lopt{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;cursor:pointer;transition:.14s}
+  .lopt:hover{border-color:var(--accent)}
+  .lopt.on{border-color:var(--accent);background:var(--accent-soft)}
+  .lopt input{accent-color:var(--accent)}
+  .lopt .nm{font-size:13.5px}
+  .lopt .sub{font-family:var(--mono);font-size:9.5px;color:var(--muted);margin-left:auto;letter-spacing:.04em}
+
+  /* stage */
+  .stage{max-width:1280px;margin:0 auto;padding:24px 28px 72px;display:flex;flex-direction:column;gap:24px}
+  .stage-empty{border:1px dashed var(--line);border-radius:16px;padding:60px 24px;text-align:center;color:var(--muted)}
+  .stage-empty b{color:var(--ink);font-family:var(--display);font-size:20px;font-weight:600;display:block;margin-bottom:6px}
+  .demo{border:1px solid var(--line);border-radius:16px;background:var(--surface);overflow:hidden;box-shadow:var(--shadow)}
+  .demo-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line-soft);flex-wrap:wrap}
+  .demo-head .dn{font-size:16px;font-weight:600}.demo-head .dn span{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:8px}
+  .demo-actions{display:flex;gap:8px;align-items:center}
+  .demo-actions a,.demo-actions button{border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13px;padding:6px 11px;border-radius:8px;cursor:pointer;text-decoration:none;transition:.15s;display:inline-flex;align-items:center;gap:5px}
+  .demo-actions a:hover,.demo-actions button:hover{border-color:var(--accent);color:var(--accent)}
+  .demo-warn{margin:14px 16px 0;background:var(--accent-soft);color:var(--accent-ink);border:1px solid var(--accent);border-radius:10px;padding:10px 13px;font-size:13.5px}
+  .demo-warn.neutral{background:var(--chip);color:var(--muted);border-color:var(--line)}
+  .demo-note{margin:14px 16px 0;border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:var(--paper)}
+  .demo-note.neutral{color:var(--muted);font-size:13px}
+  .lpills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px}
+  .lpill{font-size:12px;padding:3px 9px;border-radius:999px;font-weight:600}
+  .lpill.ok{background:var(--ok-soft);color:var(--ok)}
+  .lpill.no{background:var(--accent-soft);color:var(--accent-ink);text-decoration:line-through}
+  .note-sum{font-size:13px}
+  .note-sum.ok{color:var(--ok)}.note-sum.no{color:var(--accent-ink)}
+  .demo-body{padding:24px;display:flex;justify-content:center;overflow:auto;background:linear-gradient(0deg,var(--line-soft),transparent)}
+
+  .mock-root{font-family:var(--body-font,'Inter');color:#1d1b1a}
+  .mock-root.cs-upper{text-transform:uppercase}
+  .mock-root.cs-lower{text-transform:lowercase}
+  .mock-root h1,.mock-root h2,.mock-root h3,.mock-root .display{font-family:var(--head-font,'Inter')}
+  .phone{width:392px;max-width:100%;border:1px solid #e7e3dc;border-radius:34px;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.08);overflow:hidden}
+  .phone .status{display:flex;justify-content:space-between;padding:14px 22px 4px;font-size:.72em;color:#8a857d;font-weight:600}
+  .phone .scr{padding:8px 22px 0}
+  .greet{font-size:2em;font-weight:700;line-height:1.05;letter-spacing:-.01em;margin-top:6px}
+  .tag{color:#6f6a62;font-size:.95em;margin-top:8px;line-height:1.4}
+  .hero-card{margin-top:18px;border-radius:18px;overflow:hidden;background:#11100f;color:#fff}
+  .hero-card .ph{height:128px;background:linear-gradient(135deg,#d62828,#7a1d1d)}
+  .hero-card .cc{padding:14px 16px 16px}.hero-card .cc h3{font-size:1.25em;font-weight:600;line-height:1.15}.hero-card .cc p{font-size:.84em;opacity:.8;margin-top:5px}
+  .hero-card .st{font-size:.78em;opacity:.85;margin-top:10px;display:flex;gap:14px}.hero-card .st b{font-size:1.5em;display:block;font-weight:700}
+  .sec{display:flex;justify-content:space-between;align-items:baseline;margin:22px 0 10px}.sec h2{font-size:1.15em;font-weight:600}.sec a{color:#d62828;font-size:.82em;font-weight:600;text-decoration:none}
+  .listitem{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid #efe9e1}
+  .listitem .av{width:38px;height:38px;border-radius:11px;background:#f0ece4;flex:none}.listitem .ti{font-weight:600;font-size:.96em}.listitem .su{color:#8a857d;font-size:.8em;margin-top:2px}.listitem .num{margin-left:auto;font-weight:600;font-size:.9em}
+  .btns{display:flex;gap:10px;margin:18px 0 4px}
+  .btn-p{flex:1;background:#d62828;color:#fff;border:none;border-radius:12px;padding:13px;font-size:.96em;font-weight:600;font-family:inherit;cursor:pointer}
+  .btn-s{flex:1;background:#f4f1eb;color:#1d1b1a;border:none;border-radius:12px;padding:13px;font-size:.96em;font-weight:600;font-family:inherit;cursor:pointer}
+  .nav{display:flex;justify-content:space-around;border-top:1px solid #efe9e1;padding:13px 0 16px;margin-top:18px}.nav span{font-size:.78em;color:#8a857d;font-weight:500}.nav span.act{color:#d62828}
+  /* chat */
+  .chat-head{display:flex;align-items:center;gap:10px;padding:16px 18px 12px;border-bottom:1px solid #efe9e1}
+  .chat-head .av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#d62828,#7a1d1d);flex:none}
+  .chat-head .nm{font-weight:600;font-size:1.05em}.chat-head .stt{font-size:.72em;color:#1a7f4b}
+  .chat-body{padding:16px;display:flex;flex-direction:column;gap:10px;min-height:330px}
+  .bub{max-width:78%;padding:10px 13px;border-radius:16px;font-size:.92em;line-height:1.35}
+  .bub.in{background:#f4f1eb;align-self:flex-start;border-bottom-left-radius:5px}
+  .bub.out{background:#d62828;color:#fff;align-self:flex-end;border-bottom-right-radius:5px}
+  .bub .tm{font-size:.68em;opacity:.6;margin-top:4px;display:block}
+  .chat-input{display:flex;gap:8px;padding:12px 16px 16px;border-top:1px solid #efe9e1;align-items:center}
+  .chat-input .box{flex:1;background:#f4f1eb;border-radius:20px;padding:11px 15px;font-size:.88em;color:#8a857d}
+  .chat-input .snd{width:40px;height:40px;border-radius:50%;background:#d62828;color:#fff;border:none;font-size:1.1em;cursor:pointer;flex:none}
+  /* profile */
+  .prof{padding:24px 22px 8px}
+  .prof .av{width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,#d62828,#7a1d1d);margin-bottom:14px}
+  .prof h1{font-size:1.7em;font-weight:700}.prof .handle{color:#8a857d;font-size:.9em;margin-top:2px}
+  .prof .bio{font-size:.95em;color:#4a463f;margin-top:12px;line-height:1.5}
+  .prof .stats{display:flex;gap:26px;margin:18px 0}.prof .stats .n{font-size:1.4em;font-weight:700}.prof .stats .l{font-size:.78em;color:#8a857d}
+  .prof .tabs{display:flex;gap:20px;border-bottom:1px solid #efe9e1;margin-top:6px}
+  .prof .tabs span{padding:10px 0;font-size:.9em;color:#8a857d;font-weight:500}.prof .tabs span.act{color:#d62828;border-bottom:2px solid #d62828}
+  .prof .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:14px;padding-bottom:8px}.prof .grid div{aspect-ratio:1;background:#f0ece4;border-radius:8px}
+  /* music */
+  .music{padding:26px 24px;text-align:center}
+  .music .art{width:100%;aspect-ratio:1;border-radius:20px;background:linear-gradient(135deg,#d62828,#7a1d1d);margin-bottom:22px}
+  .music h1{font-size:1.5em;font-weight:700}.music .artist{color:#8a857d;margin-top:4px}
+  .music .bar{height:4px;background:#efe9e1;border-radius:2px;margin:20px 0 6px;position:relative}.music .bar::after{content:"";position:absolute;left:0;top:0;height:100%;width:38%;background:#d62828;border-radius:2px}
+  .music .times{display:flex;justify-content:space-between;font-size:.75em;color:#8a857d}
+  .music .ctrl{display:flex;justify-content:center;align-items:center;gap:26px;font-size:1.5em;margin-top:18px;color:#1d1b1a}
+  .music .ctrl .play{width:60px;height:60px;border-radius:50%;background:#d62828;color:#fff;display:grid;place-items:center}
+  .music .next{text-align:left;margin-top:24px}
+  /* settings */
+  .settings{padding:18px 0 8px}.settings h1{font-size:1.5em;font-weight:700;padding:0 22px 6px}
+  .settings .grp{font-size:.74em;color:#8a857d;text-transform:uppercase;letter-spacing:.06em;padding:14px 22px 6px;font-weight:600}
+  .settings .row{display:flex;align-items:center;gap:12px;padding:12px 22px;border-top:1px solid #efe9e1}
+  .settings .row .ic{width:30px;height:30px;border-radius:8px;background:#f0ece4;flex:none}.settings .row .t{font-size:.96em;font-weight:500}.settings .row .v{margin-left:auto;color:#8a857d;font-size:.86em}
+  /* login */
+  .login{padding:38px 26px 28px}.login h1{font-size:1.9em;font-weight:700;line-height:1.05}
+  .login .sub{color:#6f6a62;margin-top:10px;font-size:.95em;line-height:1.4}
+  .login .fld{margin-top:18px}.login .fld label{font-size:.8em;color:#8a857d;font-weight:600}
+  .login .fld .inp{margin-top:6px;border:1px solid #e7e3dc;border-radius:11px;padding:13px;font-size:.95em;color:#b8b2a8}
+  .login .btn-p{width:100%;margin-top:22px}.login .alt{text-align:center;margin-top:16px;font-size:.88em;color:#8a857d}.login .alt b{color:#d62828}
+  /* shop */
+  .shop .img{height:250px;background:linear-gradient(135deg,#d62828,#7a1d1d)}
+  .shop .body{padding:20px 22px}.shop .cat{font-size:.78em;color:#8a857d;text-transform:uppercase;letter-spacing:.06em}
+  .shop h1{font-size:1.5em;font-weight:700;margin-top:4px}.shop .price{font-size:1.8em;font-weight:800;margin:10px 0;color:#11100f}
+  .shop .rate{color:#d62828;font-size:.9em;margin-bottom:12px}.shop .desc{color:#4a463f;font-size:.95em;line-height:1.5}.shop .btns{margin-top:18px}
+  /* dashboard / landing */
+  .dash{width:100%;max-width:900px;border:1px solid #e7e3dc;border-radius:18px;background:#fff;overflow:hidden;display:grid;grid-template-columns:200px 1fr;box-shadow:0 10px 30px rgba(0,0,0,.06)}
+  .dash .side{background:#faf7f1;border-right:1px solid #efe9e1;padding:22px 16px}.dash .side .logo{font-weight:700;font-size:1.2em;margin-bottom:22px}
+  .dash .side .nv{display:block;padding:9px 12px;border-radius:9px;color:#6f6a62;font-size:.9em;margin-bottom:4px}.dash .side .nv.act{background:#fff;color:#d62828;font-weight:600;border:1px solid #efe9e1}
+  .dash .main{padding:24px 26px}.dash .main h1{font-size:1.7em;font-weight:700}.dash .main .sub{color:#6f6a62;font-size:.92em;margin-top:4px}
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0}.kpi{border:1px solid #efe9e1;border-radius:14px;padding:16px}.kpi .l{color:#8a857d;font-size:.8em}.kpi .v{font-size:2em;font-weight:700;margin-top:4px}.kpi .d{font-size:.78em;color:#1a7f4b;margin-top:4px;font-weight:600}
+  .dtable{border:1px solid #efe9e1;border-radius:14px;overflow:hidden}.dtable .r{display:flex;align-items:center;gap:12px;padding:13px 16px;border-top:1px solid #efe9e1;font-size:.9em}.dtable .r:first-child{border-top:none;background:#faf7f1;color:#8a857d;font-weight:600;font-size:.8em;text-transform:uppercase;letter-spacing:.04em}.dtable .r .c1{flex:2;font-weight:600}.dtable .r .c2{flex:1;color:#6f6a62}.dtable .r .c3{flex:1;text-align:right;font-weight:600}
+  .landing{width:100%;max-width:840px;text-align:center;background:#fff;color:#1d1b1a;border:1px solid #e7e3dc;border-radius:18px;padding:44px 32px;box-shadow:0 10px 30px rgba(0,0,0,.06)}.landing .eyebrow{font-family:var(--body-font);color:#d62828;font-weight:600;font-size:.85em;letter-spacing:.08em;text-transform:uppercase}
+  .landing h1{font-size:clamp(2em,5.5vw,3.4em);font-weight:900;line-height:1.02;letter-spacing:-.02em;margin:14px auto;max-width:16ch;color:#1d1b1a}
+  .landing .lead{color:#6f6a62;font-size:1.2em;max-width:44ch;margin:0 auto 26px;line-height:1.5}
+  .landing .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}.landing .cta .btn-p,.landing .cta .btn-s{flex:none;padding:14px 28px;border-radius:12px}
+  .feats{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:46px;text-align:left}.feat .fn{font-size:1.8em;font-weight:800;color:#d62828}.feat h3{font-size:1.15em;font-weight:700;margin:8px 0 6px}.feat p{color:#6f6a62;font-size:.92em;line-height:1.5}
+
+  /* ===== 5 app templates ===== */
+  .st-bar{display:flex;justify-content:space-between;padding:14px 20px 2px;font-size:.72em;font-weight:700;color:#1d1b1a}
+  .st-bar.light{color:#fff}
+  .gtile{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:.72em;text-align:center;font-weight:600}
+  .gico{width:46px;height:46px;border-radius:14px}.gico.sm{width:34px;height:34px;border-radius:10px}
+  .gtile span{line-height:1.1}
+  .ph-nav{display:flex;justify-content:space-around;align-items:center;padding:12px 6px 16px;margin-top:14px;font-size:.74em;font-weight:600}
+  .ph-nav.light{border-top:1px solid #efe9e1;color:#8a857d}.ph-nav.light .act{color:#d62828}
+  .ph-nav.game{border-top:1px solid rgba(255,255,255,.12);color:#b9b4d8}.ph-nav.game .act{color:#a78bfa}
+  .ph-nav .cam,.ph-nav .vip{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#fb7185,#f472b6);color:#fff;display:grid;place-items:center;font-size:1.1em}
+  .ph-nav.game .vip{background:linear-gradient(135deg,#fbbf24,#f59e0b)}
+  /* FILTER */
+  .phone.app-filter{background:linear-gradient(180deg,#e9e3ff,#fde4f1 38%,#fff 64%)}
+  .app-filter .af-top{display:flex;gap:10px;padding:4px 18px 8px}
+  .af-search{flex:1;background:rgba(255,255,255,.75);border-radius:20px;padding:10px 14px;font-size:.78em;color:#9a8fb5}
+  .af-vip{background:linear-gradient(135deg,#f472b6,#fb7185);color:#fff;border-radius:16px;padding:10px 13px;font-size:.74em;font-weight:800}
+  .af-hero{display:flex;padding:4px 18px 14px;align-items:center}
+  .af-hero .af-ht{flex:1}
+  .af-hero h1{font-size:2.2em;font-weight:800;line-height:1.04;background:linear-gradient(90deg,#7c3aed,#db2777);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .af-sub{display:inline-block;background:rgba(255,255,255,.7);border-radius:14px;padding:5px 12px;font-size:.74em;color:#7c3aed;margin:8px 0}
+  .af-cta{display:inline-block;background:#fff;color:#db2777;border-radius:16px;padding:9px 18px;font-size:.82em;font-weight:700;box-shadow:0 4px 14px rgba(219,39,119,.2)}
+  .af-himg{width:120px;height:150px;border-radius:18px;background:linear-gradient(135deg,#c4b5fd,#f9a8d4)}
+  .af-cards{display:flex;gap:12px;padding:0 18px 14px}
+  .af-card{flex:1;border-radius:18px;padding:14px;display:flex;justify-content:space-between;align-items:center;color:#fff}
+  .af-card.c1{background:linear-gradient(135deg,#fb7185,#f472b6)}.af-card.c2{background:linear-gradient(135deg,#818cf8,#38bdf8)}
+  .af-card b{font-size:1.05em;font-weight:700;display:block}.af-card span{font-size:.74em;opacity:.9}
+  .af-cico{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.4)}
+  .af-g4,.af-g8{display:grid;background:#fff;margin:0 16px 12px;border-radius:18px;padding:16px 10px;gap:16px 4px}
+  .af-g4{grid-template-columns:repeat(4,1fr)}.af-g8{grid-template-columns:repeat(4,1fr)}
+  .af-tabs{display:flex;gap:18px;padding:4px 20px 10px;font-size:.86em}
+  .af-tabs span{color:#9a8fb5;font-weight:600}.af-tabs .act{color:#db2777;font-weight:800}
+  .af-tpls{display:flex;gap:12px;padding:0 18px 6px}
+  .af-tpl{flex:1;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.05)}
+  .af-tpl .ph{height:90px;background:linear-gradient(135deg,#a7f3d0,#fde68a)}
+  .af-tc{padding:9px 12px}.af-tc b{font-size:.9em;display:block}.af-tc span{font-size:.72em;color:#9a8fb5}
+  /* PRANK */
+  .phone.app-prank{background:radial-gradient(circle at 50% 0,#3b2a8c,#1e1248 70%)}
+  .app-prank .pk-top{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 6px}
+  .pk-coins{background:#1a1340;border:1px solid #5b4bb8;color:#ffd54a;border-radius:16px;padding:6px 12px;font-size:.78em;font-weight:800}
+  .pk-coins b{color:#34d399}.pk-ics span{margin-left:8px;font-size:1.1em}
+  .pk-title{text-align:center;font-size:2.1em;font-weight:800;color:#ffd54a;text-shadow:0 2px 0 #b45309,0 0 18px rgba(255,213,74,.4);padding:4px 0 2px;letter-spacing:.02em}
+  .pk-side{display:flex;justify-content:center;gap:14px;margin:6px 0}
+  .pk-sb{text-align:center;font-size:.66em;color:#cbd5e1;font-weight:700}
+  .pk-sbi{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#4338ca);margin:0 auto 4px;border:2px solid #a78bfa}
+  .pk-play{margin:10px 22px;background:linear-gradient(180deg,#ffd54a,#f59e0b);color:#7c2d12;text-align:center;font-size:1.5em;font-weight:800;padding:14px;border-radius:18px;border:3px solid #fff7cd;box-shadow:0 6px 0 #b45309;text-transform:uppercase}
+  .pk-more{text-align:center;color:#fff;font-weight:800;font-size:.86em;margin:14px 0 8px;background:#2a1f63;display:inline-block;padding:5px 16px;border-radius:14px;left:50%;position:relative;transform:translateX(-50%)}
+  .pk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 16px 8px}
+  .pk-tile{border-radius:14px;padding:12px 6px 8px;text-align:center;color:#fff;font-weight:800;font-size:.74em;border:2px solid rgba(255,255,255,.25)}
+  .pk-ti{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.35);margin:0 auto 6px}
+  /* PERSONALIZE */
+  .phone.app-perso{background:linear-gradient(180deg,#faf7ff,#fff)}
+  .app-perso .pe-head{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 22px 4px}
+  .pe-head h1{font-size:1.7em;font-weight:800;color:#2d2a3d}.pe-sub{color:#8b86a0;font-size:.9em;margin-top:2px}
+  .pe-bell{width:40px;height:40px;border-radius:50%;background:#f3f0fa;display:grid;place-items:center}
+  .pe-quote{margin:14px 22px;background:#ede9fe;border-radius:18px;padding:16px;display:flex;gap:10px;align-items:center}
+  .pe-qmark{font-size:2em;color:#7c3aed;font-weight:800;line-height:.6}
+  .pe-qt{flex:1;font-weight:700;color:#2d2a3d;font-size:.98em;line-height:1.25}
+  .pe-qimg{width:70px;height:70px;border-radius:16px;background:linear-gradient(135deg,#c4b5fd,#f9a8d4)}
+  .pe-sec{display:flex;justify-content:space-between;align-items:baseline;padding:14px 22px 8px}
+  .pe-sec h2{font-size:1.15em;font-weight:800;color:#2d2a3d}.pe-sec a{color:#7c3aed;font-size:.8em;font-weight:700}
+  .pe-plan{display:flex;gap:10px;padding:0 18px}
+  .pe-pcard{flex:1;border-radius:16px;padding:14px 12px}
+  .pe-pcard.p0{background:#fce7f3}.pe-pcard.p1{background:#dcfce7}.pe-pcard.p2{background:#ffedd5}
+  .pe-pico{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.7);margin-bottom:10px}
+  .pe-pcard b{font-size:.96em;display:block;color:#2d2a3d}.pe-pcard span{font-size:.74em;color:#8b86a0;display:block;margin-top:2px}
+  .pe-prog{font-size:.72em;color:#db2777;font-weight:700;margin-top:10px}
+  .pe-explore{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 18px}
+  .pe-insp{margin:14px 22px 4px;background:#fef3c7;border-radius:16px;padding:14px;display:flex;gap:12px;align-items:center;font-weight:700;color:#92400e;font-size:.9em}
+  .pe-sun{font-size:1.4em}
+  /* TOOL */
+  .phone.app-tool2{background:#fff}
+  .app-tool2 .to-head{display:flex;align-items:center;gap:10px;padding:6px 22px 8px}
+  .to-logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#3b82f6,#60a5fa)}
+  .to-head h1{flex:1;font-size:1.6em;font-weight:800;color:#0f172a}
+  .to-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#60a5fa,#a78bfa)}
+  .to-search{display:flex;align-items:center;gap:8px;margin:0 22px 14px;background:#f1f5f9;border-radius:14px;padding:12px 14px;font-size:.86em;color:#94a3b8}
+  .to-search span{flex:1}.to-flt{width:24px;height:24px;border-radius:7px;border:1px solid #cbd5e1}
+  .to-feat{margin:0 18px 16px;background:linear-gradient(135deg,#dbeafe,#eff6ff);border-radius:18px;padding:18px;display:flex}
+  .to-ft{flex:1}.to-tag{display:inline-block;background:#3b82f6;color:#fff;border-radius:8px;padding:3px 10px;font-size:.68em;font-weight:700;margin-bottom:8px}
+  .to-feat h2{font-size:1.3em;font-weight:800;color:#0f172a;line-height:1.1}.to-feat p{font-size:.78em;color:#475569;margin:6px 0 10px}
+  .to-fbtn{display:inline-block;background:#2563eb;color:#fff;border-radius:12px;padding:9px 16px;font-size:.8em;font-weight:700}
+  .to-fimg{width:80px;height:80px;border-radius:16px;background:linear-gradient(135deg,#60a5fa,#3b82f6);align-self:center}
+  .to-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 4px;padding:0 16px 6px}
+  .to-recent{padding:0 18px}
+  .to-rc{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #f1f5f9}
+  .to-rc b{font-size:.92em;color:#0f172a;display:block}.to-rc span{font-size:.74em;color:#94a3b8}
+  .to-ago{margin-left:auto;font-size:.72em;color:#94a3b8}
+  .to-stats{margin:14px 18px 4px;background:linear-gradient(135deg,#eff6ff,#f0fdfa);border-radius:18px;padding:16px;display:flex;align-items:center;gap:16px}
+  .to-ring{width:74px;height:74px;border-radius:50%;border:6px solid #3b82f6;display:grid;place-items:center;text-align:center}
+  .to-ring b{font-size:1.3em;font-weight:800;color:#0f172a}.to-ring span{font-size:.6em;color:#64748b}
+  .to-sk{flex:1;display:flex;justify-content:space-between;text-align:center}
+  .to-sk b{font-size:1.05em;color:#0f172a;display:block}.to-sk span{font-size:.66em;color:#64748b}
+  /* ENTERTAINMENT */
+  .phone.app-ent{background:#0f1024;color:#e8e6f5}
+  .app-ent .en-head{display:flex;align-items:center;gap:10px;padding:8px 16px 10px}
+  .en-av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#60a5fa,#a78bfa);flex:none}
+  .en-hi{flex:1}.en-hi b{font-size:1.05em;color:#fff;display:block}
+  .en-lv{font-size:.7em;color:#fbbf24;display:flex;align-items:center;gap:6px;font-weight:700}.en-lv i{flex:1;max-width:60px;height:5px;border-radius:3px;background:#2a2a52;position:relative}.en-lv i::after{content:"";position:absolute;left:0;top:0;height:100%;width:55%;background:#a78bfa;border-radius:3px}
+  .en-gem{background:#1a1b3a;border:1px solid #3a3a6a;border-radius:16px;padding:6px 11px;font-size:.74em;font-weight:700;color:#c4b5fd}
+  .en-hero{margin:0 16px 14px;border-radius:16px;overflow:hidden;background:linear-gradient(135deg,#3b2a8c,#1e1b4b);padding:18px;min-height:120px}
+  .en-ht h1{font-size:1.8em;font-weight:800;color:#fff;line-height:1}.en-nu{color:#fff;font-size:.82em;font-weight:700;margin-top:8px}.en-hs{color:#c4b5d8;font-size:.78em;margin:4px 0 10px}
+  .en-play{display:inline-block;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;border-radius:14px;padding:9px 18px;font-size:.82em;font-weight:700}
+  .en-quick{display:flex;justify-content:space-between;background:#16172f;border-radius:14px;margin:0 16px 16px;padding:12px 8px}
+  .en-q{text-align:center;font-size:.64em;color:#b9b4d8;font-weight:600;flex:1}.en-qi{width:40px;height:40px;border-radius:12px;margin:0 auto 5px}
+  .en-sec{display:flex;justify-content:space-between;align-items:baseline;padding:4px 18px 10px}
+  .en-sec h2{font-size:1.05em;font-weight:800;color:#fff}.en-sec a{color:#a78bfa;font-size:.78em;font-weight:600}
+  .en-cards{display:flex;gap:10px;padding:0 16px 6px;overflow:auto}
+  .en-card{flex:none;width:104px}.en-ci{width:104px;height:128px;border-radius:12px;margin-bottom:6px}
+  .en-card b{font-size:.86em;color:#fff;display:block}.en-card span{font-size:.72em;color:#9a96c0}.en-rate{font-size:.74em;color:#fbbf24;margin-top:2px}
+  .en-trend{padding:0 18px}
+  .en-tr{display:flex;align-items:center;gap:12px;padding:9px 0}
+  .en-rk{width:22px;height:22px;border-radius:50%;background:#2a2a52;color:#fff;display:grid;place-items:center;font-size:.74em;font-weight:700}
+  .en-ti{width:44px;height:44px;border-radius:11px}.en-tr b{font-size:.9em;color:#fff;display:block}.en-tr span{font-size:.74em;color:#fbbf24}
+
+  footer{border-top:1px solid var(--line);padding:22px 28px;text-align:center;color:var(--muted);font-size:12.5px;font-family:var(--mono)}
+  .zoom{position:fixed;inset:0;z-index:200;background:rgba(8,6,5,.9);display:none;flex-direction:column}
+  .zoom.open{display:flex}
+  .zoom-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 16px;background:var(--paper);border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .zoom-fonts{display:flex;gap:8px;flex-wrap:wrap}
+  .zf{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;font-family:var(--ui);font-weight:600}
+  .zf.act{background:var(--accent);border-color:var(--accent);color:#fff}
+  .zoom-tools{display:flex;align-items:center;gap:10px}
+  .zoom-tools input{width:120px}
+  #zoomClose{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:9px;padding:7px 14px;cursor:pointer;font-family:var(--ui);font-weight:700}
+  #zoomClose:hover{border-color:var(--accent);color:var(--accent)}
+  .zoom-stage{flex:1;overflow:auto;display:flex;justify-content:center;align-items:flex-start;padding:26px 16px}
+  .zoom-sel{display:flex;flex-direction:column;gap:8px}
+  .zoom-langs{display:flex;gap:6px;flex-wrap:wrap}
+  .zl{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font-size:12.5px;cursor:pointer;font-family:var(--ui);font-weight:600}
+  .zl.act{background:var(--accent);border-color:var(--accent);color:#fff}
+  .vl-row{align-items:center;flex-wrap:wrap}
+  .vlchip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;font-family:var(--ui);font-weight:600;transition:.14s}
+  .vlchip:hover{border-color:var(--accent)}
+  .vlchip.act{background:var(--accent);border-color:var(--accent);color:#fff}
+  .vl-hint{color:var(--muted);font-size:13px;align-self:center}
+  footer a{color:var(--accent);text-decoration:none}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper);padding:11px 20px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:100;box-shadow:var(--shadow)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media (max-width:760px){.dash{grid-template-columns:1fr}.dash .side{display:none}.kpis,.feats{grid-template-columns:1fr}
+    .lbl{min-width:0}.langstatus{margin-left:0}}
+  @media (max-width:640px){.masthead{padding:22px 18px 14px}.controls-inner,.stage{padding-left:18px;padding-right:18px}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  button:focus-visible,input:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<header><div class="masthead">
+  <div class="brand">
+    <div class="kicker">Type Studio · Google Fonts</div>
+    <h1>Thử font ngay <em>trên UI thật</em></h1>
+    <p>Thêm font (gõ tên hoặc dán link Google Fonts) — font hiện ngay trên một màn hình giao diện. Chọn các ngôn ngữ cần hiển thị; font nào thiếu ngôn ngữ nào sẽ được báo rõ tên.</p>
+  </div>
+  <button class="icon-btn" id="themeBtn" title="Sáng / tối" aria-label="Đổi giao diện">◐</button>
+</div></header>
+
+<section class="controls"><div class="controls-inner">
+  <div class="ctl-row">
+    <span class="lbl">Thêm font</span>
+    <div class="fontbox">
+      <div class="inwrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="fontInput" placeholder="Gõ tên font hoặc dán link Google Fonts…" autocomplete="off">
+        <button class="addbtn" id="fontAddBtn">＋ Thêm</button>
+      </div>
+      <div class="suggest" id="suggest"></div>
+    </div>
+    <span class="lbl" style="margin-left:6px">Bố cục</span>
+    <select id="tplSel">
+      <optgroup label="App (mới)">
+        <option value="filter">Filter app</option>
+        <option value="prank">Prank app</option>
+        <option value="personalize">Personalize app</option>
+        <option value="tool">Tool app</option>
+        <option value="entertainment">Entertainment app</option>
+      </optgroup>
+      <optgroup label="Mobile">
+        <option value="feed">Feed</option>
+        <option value="chat">Chat / Tin nhắn</option>
+        <option value="profile">Hồ sơ</option>
+        <option value="music">Nghe nhạc</option>
+        <option value="settings">Cài đặt</option>
+        <option value="login">Đăng nhập</option>
+        <option value="shop">Sản phẩm</option>
+      </optgroup>
+      <optgroup label="Desktop">
+        <option value="dash">Dashboard</option>
+        <option value="landing">Landing</option>
+      </optgroup>
+    </select>
+    <span class="lbl" style="margin-left:6px">Tỉ lệ chữ</span>
+    <div class="slider-wrap"><input type="range" id="uiScale" min="80" max="140" value="100"><span class="size-val" id="uiScaleVal">100%</span></div>
+    <span class="lbl" style="margin-left:6px">Kiểu chữ</span>
+    <div class="seg" id="caseSeg">
+      <button data-cs="none" aria-pressed="true">Aa</button>
+      <button data-cs="upper" aria-pressed="false">HOA</button>
+      <button data-cs="lower" aria-pressed="false">thường</button>
+    </div>
+  </div>
+
+  <div class="ctl-row">
+    <span class="lbl">Ngôn ngữ hiển thị</span>
+    <div class="chips" id="langChips"></div>
+  </div>
+  <div id="langStatus" class="langstatus"></div>
+  <div class="langpanel" id="langPanel">
+    <div class="ph"><span class="t">Dán danh sách rồi Enter — hoặc bấm chọn bên dưới (thêm ngay)</span><button class="btn-sm" id="lpClose">Đóng</button></div>
+    <div class="paste-row">
+      <input type="text" class="plain" id="pasteLangs" placeholder="Dán danh sách: English, Korean, French, Arabic…">
+      <button class="btn-sm primary" id="pasteAdd">＋ Thêm ngôn ngữ</button>
+    </div>
+    <div class="paste-row"><input type="text" class="plain" id="lpSearch" placeholder="🔎 Tìm nhanh ngôn ngữ để bấm thêm…"></div>
+    <div class="lgrid" id="lgrid"></div>
+  </div>
+
+  <div class="ctl-row vl-row">
+    <span class="lbl">Xem preview bằng</span>
+    <div class="chips" id="viewLangs"></div>
+  </div>
+</div></section>
+
+<section class="stage" id="stage"></section>
+
+<footer>Font tải động từ Google Fonts CDN · subset tham khảo từ <a href="https://fonts.google.com" target="_blank" rel="noopener">Google Fonts</a> · bản dịch UI dùng để xem trước.</footer>
+<div class="zoom" id="zoom" aria-hidden="true">
+  <div class="zoom-bar">
+    <div class="zoom-sel">
+      <div class="zoom-fonts" id="zoomFonts"></div>
+      <div class="zoom-langs" id="zoomLangs"></div>
+    </div>
+    <div class="zoom-tools">
+      <span class="lbl">Phóng</span>
+      <input type="range" id="zoomScale" min="100" max="240" value="150"><span class="size-val" id="zoomScaleVal">150%</span>
+      <button id="zoomClose">✕ Đóng</button>
+    </div>
+  </div>
+  <div class="zoom-stage" id="zoomStage"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const LANG={latin:{vi:"Latin"},"latin-ext":{vi:"Latin+"},vietnamese:{vi:"Tiếng Việt"},cyrillic:{vi:"Cyrillic"},"cyrillic-ext":{vi:"Cyrillic+"},greek:{vi:"Hy Lạp"},"greek-ext":{vi:"Hy Lạp+"},hebrew:{vi:"Hebrew"},arabic:{vi:"Ả Rập"},devanagari:{vi:"Devanagari"},thai:{vi:"Thái"},japanese:{vi:"Nhật"},korean:{vi:"Hàn"},"chinese-simplified":{vi:"Trung"},"chinese-traditional":{vi:"Trung phồn thể"},bengali:{vi:"Bengali"},tamil:{vi:"Tamil"},telugu:{vi:"Telugu"},kannada:{vi:"Kannada"},malayalam:{vi:"Malayalam"},gujarati:{vi:"Gujarati"},gurmukhi:{vi:"Gurmukhi"},khmer:{vi:"Khmer"},lao:{vi:"Lào"},myanmar:{vi:"Myanmar"},sinhala:{vi:"Sinhala"},georgian:{vi:"Georgian"},armenian:{vi:"Armenian"},ethiopic:{vi:"Ethiopic"},oriya:{vi:"Odia"},thaana:{vi:"Thaana"}};
+const CAT={sans:"Sans-serif",serif:"Serif",display:"Display",hand:"Handwriting",mono:"Monospace"};
+const FALLBACK={sans:"sans-serif",serif:"serif",display:"sans-serif",hand:"cursive",mono:"monospace"};
+
+const FONTS=[
+{n:"Inter",cat:"sans",s:["latin","latin-ext","cyrillic","cyrillic-ext","greek","greek-ext","vietnamese"],w:[400,500,700]},
+{n:"Roboto",cat:"sans",s:["latin","latin-ext","cyrillic","cyrillic-ext","greek","greek-ext","vietnamese"],w:[400,500,700]},
+{n:"Open Sans",cat:"sans",s:["latin","latin-ext","cyrillic","cyrillic-ext","greek","greek-ext","vietnamese","hebrew"],w:[400,600,700]},
+{n:"Be Vietnam Pro",cat:"sans",s:["latin","latin-ext","vietnamese"],w:[400,500,700]},
+{n:"Montserrat",cat:"sans",s:["latin","latin-ext","cyrillic","cyrillic-ext","vietnamese"],w:[400,500,700]},
+{n:"Poppins",cat:"sans",s:["latin","latin-ext","devanagari"],w:[400,500,700]},
+{n:"Lato",cat:"sans",s:["latin","latin-ext"],w:[400,700]},
+{n:"Nunito",cat:"sans",s:["latin","latin-ext","cyrillic","cyrillic-ext","vietnamese"],w:[400,600,700]},
+{n:"Raleway",cat:"sans",s:["latin","latin-ext","cyrillic","cyrillic-ext","vietnamese"],w:[400,500,700]},
+{n:"Work Sans",cat:"sans",s:["latin","latin-ext","vietnamese"],w:[400,500,700]},
+{n:"Mulish",cat:"sans",s:["latin","latin-ext","cyrillic","cyrillic-ext","vietnamese"],w:[400,600,700]},
+{n:"Manrope",cat:"sans",s:["latin","latin-ext","cyrillic","cyrillic-ext","greek","vietnamese"],w:[400,500,700]},
+{n:"DM Sans",cat:"sans",s:["latin","latin-ext"],w:[400,500,700]},
+{n:"Source Sans 3",cat:"sans",s:["latin","latin-ext","cyrillic","cyrillic-ext","greek","greek-ext","vietnamese"],w:[400,600,700]},
+{n:"Fira Sans",cat:"sans",s:["latin","latin-ext","cyrillic","cyrillic-ext","greek","greek-ext","vietnamese"],w:[400,500,700]},
+{n:"Quicksand",cat:"sans",s:["latin","latin-ext","vietnamese"],w:[400,500,700]},
+{n:"Josefin Sans",cat:"sans",s:["latin","latin-ext","vietnamese"],w:[400,600,700]},
+{n:"Cabin",cat:"sans",s:["latin","latin-ext","vietnamese"],w:[400,500,700]},
+{n:"Barlow",cat:"sans",s:["latin","latin-ext","vietnamese"],w:[400,500,700]},
+{n:"Rubik",cat:"sans",s:["latin","latin-ext","cyrillic","cyrillic-ext","hebrew","arabic"],w:[400,500,700]},
+{n:"Karla",cat:"sans",s:["latin","latin-ext"],w:[400,500,700]},
+{n:"PT Sans",cat:"sans",s:["latin","latin-ext","cyrillic","cyrillic-ext"],w:[400,700]},
+{n:"Oswald",cat:"sans",s:["latin","latin-ext","cyrillic","cyrillic-ext","vietnamese"],w:[400,500,700]},
+{n:"Archivo",cat:"sans",s:["latin","latin-ext","vietnamese"],w:[400,500,700]},
+{n:"Heebo",cat:"sans",s:["latin","hebrew"],w:[400,500,700]},
+{n:"Hind",cat:"sans",s:["latin","latin-ext","devanagari"],w:[400,500,700]},
+{n:"Comfortaa",cat:"sans",s:["latin","latin-ext","cyrillic","cyrillic-ext","greek","vietnamese"],w:[400,500,700]},
+{n:"Exo 2",cat:"sans",s:["latin","latin-ext","cyrillic","cyrillic-ext","vietnamese"],w:[400,500,700]},
+{n:"Prompt",cat:"sans",s:["latin","latin-ext","thai","vietnamese"],w:[400,500,700]},
+{n:"Kanit",cat:"sans",s:["latin","latin-ext","thai","vietnamese"],w:[400,500,700]},
+{n:"Sarabun",cat:"sans",s:["latin","latin-ext","thai","vietnamese"],w:[400,500,700]},
+{n:"Cairo",cat:"sans",s:["latin","latin-ext","arabic"],w:[400,600,700]},
+{n:"Tajawal",cat:"sans",s:["latin","arabic"],w:[400,500,700]},
+{n:"Anton",cat:"display",s:["latin","latin-ext","vietnamese"],w:[400]},
+{n:"Bebas Neue",cat:"display",s:["latin","latin-ext","cyrillic","vietnamese"],w:[400]},
+{n:"Abril Fatface",cat:"display",s:["latin","latin-ext"],w:[400]},
+{n:"Teko",cat:"display",s:["latin","latin-ext","devanagari"],w:[400,500,700]},
+{n:"Playfair Display",cat:"serif",s:["latin","latin-ext","cyrillic","vietnamese"],w:[400,600,700]},
+{n:"Merriweather",cat:"serif",s:["latin","latin-ext","cyrillic"],w:[400,700]},
+{n:"Lora",cat:"serif",s:["latin","latin-ext","cyrillic","vietnamese"],w:[400,500,700]},
+{n:"Roboto Slab",cat:"serif",s:["latin","latin-ext","cyrillic","cyrillic-ext","greek","vietnamese"],w:[400,500,700]},
+{n:"PT Serif",cat:"serif",s:["latin","latin-ext","cyrillic","cyrillic-ext"],w:[400,700]},
+{n:"Bitter",cat:"serif",s:["latin","latin-ext","cyrillic","vietnamese"],w:[400,500,700]},
+{n:"EB Garamond",cat:"serif",s:["latin","latin-ext","cyrillic","greek","vietnamese"],w:[400,500,700]},
+{n:"Cormorant",cat:"serif",s:["latin","latin-ext","cyrillic","vietnamese"],w:[400,500,700]},
+{n:"Libre Baskerville",cat:"serif",s:["latin","latin-ext"],w:[400,700]},
+{n:"Crimson Text",cat:"serif",s:["latin","latin-ext"],w:[400,600,700]},
+{n:"Zilla Slab",cat:"serif",s:["latin","latin-ext"],w:[400,500,700]},
+{n:"Noto Serif",cat:"serif",s:["latin","latin-ext","cyrillic","cyrillic-ext","greek","vietnamese"],w:[400,500,700]},
+{n:"Dancing Script",cat:"hand",s:["latin","latin-ext","vietnamese"],w:[400,700]},
+{n:"Pacifico",cat:"hand",s:["latin","latin-ext","cyrillic","cyrillic-ext","vietnamese"],w:[400]},
+{n:"Caveat",cat:"hand",s:["latin","latin-ext","cyrillic","vietnamese"],w:[400,700]},
+{n:"Lobster",cat:"hand",s:["latin","latin-ext","cyrillic","vietnamese"],w:[400]},
+{n:"Satisfy",cat:"hand",s:["latin","latin-ext"],w:[400]},
+{n:"Sacramento",cat:"hand",s:["latin","latin-ext"],w:[400]},
+{n:"Shadows Into Light",cat:"hand",s:["latin"],w:[400]},
+{n:"JetBrains Mono",cat:"mono",s:["latin","latin-ext","cyrillic","cyrillic-ext","greek","vietnamese"],w:[400,500,700]},
+{n:"Source Code Pro",cat:"mono",s:["latin","latin-ext","cyrillic","cyrillic-ext","greek","vietnamese"],w:[400,500,700]},
+{n:"Fira Code",cat:"mono",s:["latin","latin-ext","cyrillic","greek"],w:[400,500,700]},
+{n:"IBM Plex Mono",cat:"mono",s:["latin","latin-ext","cyrillic","vietnamese"],w:[400,500,700]},
+{n:"Space Mono",cat:"mono",s:["latin","latin-ext","vietnamese"],w:[400,700]},
+{n:"Inconsolata",cat:"mono",s:["latin","latin-ext","vietnamese"],w:[400,500,700]},
+{n:"Noto Sans JP",cat:"sans",s:["latin","latin-ext","cyrillic","japanese"],w:[400,500,700]},
+{n:"Noto Sans KR",cat:"sans",s:["latin","latin-ext","cyrillic","korean"],w:[400,500,700]},
+{n:"Noto Sans SC",cat:"sans",s:["latin","latin-ext","cyrillic","chinese-simplified"],w:[400,500,700]},
+{n:"Noto Sans TC",cat:"sans",s:["latin","latin-ext","cyrillic","chinese-traditional"],w:[400,500,700]},
+{n:"Noto Sans Thai",cat:"sans",s:["latin","thai"],w:[400,500,700]},
+{n:"Noto Sans Arabic",cat:"sans",s:["arabic"],w:[400,500,700]},
+{n:"Noto Sans Hebrew",cat:"sans",s:["hebrew"],w:[400,500,700]},
+{n:"Noto Sans Devanagari",cat:"sans",s:["latin","devanagari"],w:[400,500,700]}];
+
+/* ngôn ngữ có bản dịch UI đầy đủ */
+const BASE_LANGS=[
+{code:"vi",label:"Tiếng Việt",vn:true,needs:"vietnamese",dir:"ltr",b:{title:"Khám phá",tag:"Thiết kế đẹp bắt đầu từ con chữ.",sec:"Dành cho bạn",body:"Một giao diện tốt khiến mọi thứ trở nên tự nhiên. Chữ rõ ràng, khoảng cách hợp lý và nhịp điệu mạch lạc dẫn dắt người dùng.",nav:["Trang chủ","Tìm kiếm","Hồ sơ"],b1:"Bắt đầu",b2:"Tìm hiểu thêm",stat:"lượt xem",list:[["Cài đặt tài khoản","Cá nhân hóa","12.4K"],["Thông báo","Hằng ngày","248"],["Quyền riêng tư","Bảo mật","Bật"]],eyebrow:"Bộ công cụ thiết kế",feat:[["Nhanh","Tải tức thì","Mượt trên mọi thiết bị."],["Đẹp","Chuẩn mực","Typography tinh tế, dễ đọc."],["Linh hoạt","Tùy biến","Hợp mọi thương hiệu."]]}},
+{code:"en",label:"English",needs:"latin",dir:"ltr",b:{title:"Discover",tag:"Great design starts with the right type.",sec:"For you",body:"A good interface makes everything feel effortless. Clear type, generous spacing and a steady rhythm carry the reader.",nav:["Home","Search","Profile"],b1:"Get started",b2:"Learn more",stat:"views",list:[["Account settings","Personalize","12.4K"],["Notifications","Daily","248"],["Privacy","Security","On"]],eyebrow:"The design toolkit",feat:[["Fast","Instant load","Smooth on every device."],["Refined","Polished","Tasteful, legible type."],["Flexible","Custom","Fits any brand."]]}},
+{code:"ja",label:"日本語",needs:"japanese",dir:"ltr",b:{title:"見つける",tag:"良いデザインは文字から始まる。",sec:"おすすめ",body:"優れたインターフェースはすべてを自然に感じさせます。読みやすい文字と余白、一定のリズムが読者を導きます。",nav:["ホーム","検索","プロフィール"],b1:"はじめる",b2:"詳しく見る",stat:"回視聴",list:[["アカウント設定","個人設定","12.4K"],["通知","毎日","248"],["プライバシー","セキュリティ","オン"]],eyebrow:"デザインツール",feat:[["速い","即時読込","あらゆる端末で快適。"],["美しい","洗練","読みやすい上品な文字。"],["柔軟","カスタム","どんなブランドにも。"]]}},
+{code:"ko",label:"한국어",needs:"korean",dir:"ltr",b:{title:"둘러보기",tag:"좋은 디자인은 글자에서 시작됩니다.",sec:"추천",body:"좋은 인터페이스는 모든 것을 자연스럽게 느끼게 합니다. 또렷한 글자와 넉넉한 여백, 일정한 리듬이 사용자를 이끕니다.",nav:["홈","검색","프로필"],b1:"시작하기",b2:"더 알아보기",stat:"조회",list:[["계정 설정","개인화","12.4K"],["알림","매일","248"],["개인정보","보안","켜짐"]],eyebrow:"디자인 도구",feat:[["빠름","즉시 로드","모든 기기에서 부드럽게."],["정교함","세련됨","읽기 쉬운 타이포그래피."],["유연함","맞춤","어떤 브랜드에도."]]}},
+{code:"zh",label:"简体中文",needs:"chinese-simplified",dir:"ltr",b:{title:"发现",tag:"好的设计从字体开始。",sec:"为你推荐",body:"优秀的界面让一切都显得自然。清晰的文字、充足的留白和稳定的节奏引导着用户。",nav:["首页","搜索","我的"],b1:"开始使用",b2:"了解更多",stat:"次浏览",list:[["账户设置","个性化","12.4K"],["通知","每天","248"],["隐私","安全","开启"]],eyebrow:"设计工具",feat:[["快速","即时加载","在每台设备上流畅。"],["精致","打磨","清晰易读的字体。"],["灵活","自定义","适合任何品牌。"]]}},
+{code:"ar",label:"العربية",needs:"arabic",dir:"rtl",b:{title:"اكتشف",tag:"التصميم الجيد يبدأ من الخط.",sec:"مقترح لك",body:"الواجهة الجيدة تجعل كل شيء يبدو سهلاً. النص الواضح والمساحات المريحة والإيقاع الثابت يقود القارئ.",nav:["الرئيسية","بحث","الملف"],b1:"ابدأ الآن",b2:"اعرف المزيد",stat:"مشاهدة",list:[["إعدادات الحساب","تخصيص","12.4K"],["الإشعارات","يومي","248"],["الخصوصية","الأمان","مُفعّل"]],eyebrow:"أدوات التصميم",feat:[["سريع","تحميل فوري","سلس على كل جهاز."],["أنيق","متقن","خطوط واضحة وجميلة."],["مرن","مخصص","يناسب أي علامة."]]}},
+{code:"th",label:"ภาษาไทย",needs:"thai",dir:"ltr",b:{title:"ค้นพบ",tag:"งานออกแบบที่ดีเริ่มจากตัวอักษร",sec:"สำหรับคุณ",body:"อินเทอร์เฟซที่ดีทำให้ทุกอย่างรู้สึกเป็นธรรมชาติ ตัวอักษรที่ชัดเจน ระยะห่างที่พอเหมาะ และจังหวะที่สม่ำเสมอช่วยนำผู้อ่าน",nav:["หน้าแรก","ค้นหา","โปรไฟล์"],b1:"เริ่มต้น",b2:"เรียนรู้เพิ่มเติม",stat:"การดู",list:[["ตั้งค่าบัญชี","ปรับแต่ง","12.4K"],["การแจ้งเตือน","ทุกวัน","248"],["ความเป็นส่วนตัว","ความปลอดภัย","เปิด"]],eyebrow:"ชุดเครื่องมือออกแบบ",feat:[["เร็ว","โหลดทันที","ลื่นไหลทุกอุปกรณ์"],["ประณีต","ขัดเกลา","ตัวอักษรอ่านง่าย"],["ยืดหยุ่น","ปรับแต่ง","เข้ากับทุกแบรนด์"]]}},
+{code:"ru",label:"Русский",needs:"cyrillic",dir:"ltr",b:{title:"Обзор",tag:"Хороший дизайн начинается со шрифта.",sec:"Для вас",body:"Хороший интерфейс делает всё естественным. Чёткий шрифт, просторные отступы и ровный ритм ведут читателя.",nav:["Главная","Поиск","Профиль"],b1:"Начать",b2:"Подробнее",stat:"просмотров",list:[["Настройки","Персонализация","12.4K"],["Уведомления","Ежедневно","248"],["Приватность","Безопасность","Вкл"]],eyebrow:"Набор для дизайна",feat:[["Быстро","Мгновенно","Плавно на любом устройстве."],["Изящно","Отточено","Читаемая типографика."],["Гибко","Настройка","Под любой бренд."]]}},
+{code:"el",label:"Ελληνικά",needs:"greek",dir:"ltr",b:{title:"Ανακάλυψε",tag:"Ο καλός σχεδιασμός ξεκινά από τη γραμματοσειρά.",sec:"Για σένα",body:"Μια καλή διεπαφή κάνει τα πάντα να μοιάζουν φυσικά. Καθαρά γράμματα, άνετα κενά και σταθερός ρυθμός οδηγούν τον αναγνώστη.",nav:["Αρχική","Αναζήτηση","Προφίλ"],b1:"Ξεκίνα",b2:"Μάθε περισσότερα",stat:"προβολές",list:[["Ρυθμίσεις","Εξατομίκευση","12.4K"],["Ειδοποιήσεις","Καθημερινά","248"],["Απόρρητο","Ασφάλεια","Ναι"]],eyebrow:"Εργαλεία σχεδίασης",feat:[["Γρήγορο","Άμεσο","Ομαλό σε κάθε συσκευή."],["Κομψό","Φροντισμένο","Ευανάγνωστη τυπογραφία."],["Ευέλικτο","Προσαρμογή","Για κάθε μάρκα."]]}},
+{code:"hi",label:"हिन्दी",needs:"devanagari",dir:"ltr",b:{title:"खोजें",tag:"अच्छा डिज़ाइन अक्षरों से शुरू होता है।",sec:"आपके लिए",body:"एक अच्छा इंटरफ़ेस हर चीज़ को सहज बना देता है। स्पष्ट अक्षर, पर्याप्त जगह और एक समान लय पाठक का मार्गदर्शन करती है।",nav:["होम","खोज","प्रोफ़ाइल"],b1:"शुरू करें",b2:"और जानें",stat:"बार देखा",list:[["खाता सेटिंग","निजीकरण","12.4K"],["सूचनाएँ","रोज़","248"],["गोपनीयता","सुरक्षा","चालू"]],eyebrow:"डिज़ाइन टूलकिट",feat:[["तेज़","तुरंत लोड","हर डिवाइस पर सहज।"],["परिष्कृत","निखरा","पठनीय टाइपोग्राफी।"],["लचीला","कस्टम","हर ब्रांड के लिए।"]]}}
+];
+/* mẫu chữ theo hệ chữ viết (script) — dùng chung cho mọi ngôn ngữ cùng hệ chữ */
+const SCRIPTS={
+ latin:{needs:"latin",sample:"The quick brown fox jumps over the lazy dog. 0123456789"},
+ latinx:{needs:"latin-ext",sample:"Příliš žluťoučký kůň — ąćęłńóśźż İĞŞ ăâî. 0123456789"},
+ cyrillic:{needs:"cyrillic",sample:"Съешь же ещё этих мягких французских булок. 0123456789"},
+ cyrillicx:{needs:"cyrillic-ext",sample:"Хороший дизайн починається з типографіки. Її ґ є ў 0123"},
+ greek:{needs:"greek",sample:"Ξεσκεπάζω την ψυχοφθόρα βδελυγμία. 0123456789"},
+ arabic:{needs:"arabic",dir:"rtl",sample:"نص حكيم له سر قاطع وذو شأن عظيم. ٠١٢٣٤٥٦٧٨٩"},
+ hebrew:{needs:"hebrew",dir:"rtl",sample:"דג סקרן שט בים מאוכזב ולפתע מצא חברה. 0123456789"},
+ devanagari:{needs:"devanagari",sample:"ऋषियों को सताने वाले दुष्ट राक्षसों का राजा। ०१२३४५"},
+ bengali:{needs:"bengali",sample:"ভালো ডিজাইন অক্ষর থেকে শুরু হয়। ০১২৩৪৫"},
+ gurmukhi:{needs:"gurmukhi",sample:"ਚੰਗਾ ਡਿਜ਼ਾਈਨ ਅੱਖਰਾਂ ਤੋਂ ਸ਼ੁਰੂ ਹੁੰਦਾ ਹੈ। ੦੧੨੩"},
+ gujarati:{needs:"gujarati",sample:"સારી ડિઝાઇન અક્ષરોથી શરૂ થાય છે. ૦૧૨૩"},
+ tamil:{needs:"tamil",sample:"நல்ல வடிவமைப்பு எழுத்துருவில் தொடங்குகிறது."},
+ telugu:{needs:"telugu",sample:"మంచి డిజైన్ అక్షరాలతో మొదలవుతుంది. ౦౧౨౩"},
+ kannada:{needs:"kannada",sample:"ಒಳ್ಳೆಯ ವಿನ್ಯಾಸವು ಅಕ್ಷರಗಳಿಂದ ಆರಂಭವಾಗುತ್ತದೆ."},
+ malayalam:{needs:"malayalam",sample:"നല്ല രൂപകൽപ്പന അക്ഷരങ്ങളിൽ നിന്ന് തുടങ്ങുന്നു."},
+ sinhala:{needs:"sinhala",sample:"හොඳ සැලසුමක් අකුරුවලින් ආරම්භ වේ."},
+ thai:{needs:"thai",sample:"เป็นมนุษย์สุดประเสริฐเลิศคุณค่า ๐๑๒๓๔๕"},
+ lao:{needs:"lao",sample:"ການອອກແບບທີ່ດີເລີ່ມຕົ້ນຈາກໂຕອັກສອນ."},
+ khmer:{needs:"khmer",sample:"ការរចនាល្អចាប់ផ្តើមពីអក្សរ។"},
+ myanmar:{needs:"myanmar",sample:"ကောင်းမွန်သော ဒီဇိုင်းသည် စာလုံးမှ စတင်သည်။"},
+ georgian:{needs:"georgian",sample:"კარგი დიზაინი იწყება ასოებიდან."},
+ armenian:{needs:"armenian",sample:"Լավ դիզայնը սկսվում է տառերից։"},
+ ethiopic:{needs:"ethiopic",sample:"ጥሩ ንድፍ ከፊደላት ይጀምራል።"},
+ japanese:{needs:"japanese",sample:"いろはにほへと 良いデザインは文字から。0123"},
+ korean:{needs:"korean",sample:"다람쥐 헌 쳇바퀴에 타고파. 0123456789"},
+ hans:{needs:"chinese-simplified",sample:"视觉设计从字体开始，清晰易读。0123456789"},
+ hant:{needs:"chinese-traditional",sample:"視覺設計從字體開始，清晰易讀。0123456789"},
+ odia:{needs:"oriya",sample:"ଭଲ ଡିଜାଇନ୍ ଅକ୍ଷରରୁ ଆରମ୍ଭ ହୁଏ। ୦୧୨୩"},
+ thaana:{needs:"thaana",dir:"rtl",sample:"ރަނގަޅު ޑިޒައިން އަކުރުތަކުން ފެށޭ."}
+};
+/* tên tiếng Anh cho ngôn ngữ cơ bản (để khớp khi dán danh sách) */
+({vi:"Vietnamese",en:"English",ja:"Japanese",ko:"Korean",zh:"Chinese",ar:"Arabic",th:"Thai",ru:"Russian",el:"Greek",hi:"Hindi"});
+[["vi","Vietnamese"],["en","English"],["ja","Japanese"],["ko","Korean"],["zh","Chinese (Simplified)"],["ar","Arabic"],["th","Thai"],["ru","Russian"],["el","Greek"],["hi","Hindi"]].forEach(([c,e])=>{const d=BASE_LANGS.find(x=>x.code===c);if(d)d.en=e;});
+
+/* danh mục ngôn ngữ — autonym + tên tiếng Anh + hệ chữ (mẫu chữ lấy theo hệ chữ) */
+const CATALOG_RAW=[
+["es","Español","Spanish","latin"],["pt","Português","Portuguese","latin"],["it","Italiano","Italian","latin"],
+["de","Deutsch","German","latin"],["fr","Français","French","latin"],["nl","Nederlands","Dutch","latin"],
+["sv","Svenska","Swedish","latin"],["no","Norsk","Norwegian","latin"],["da","Dansk","Danish","latin"],
+["fi","Suomi","Finnish","latin"],["id","Bahasa Indonesia","Indonesian","latin"],["ms","Bahasa Melayu","Malay","latin"],
+["tl","Filipino","Filipino","latin"],["sw","Kiswahili","Swahili","latin"],["af","Afrikaans","Afrikaans","latin"],
+["ca","Català","Catalan","latin"],["gl","Galego","Galician","latin"],["eu","Euskara","Basque","latin"],
+["ga","Gaeilge","Irish","latin"],["cy","Cymraeg","Welsh","latin"],["zu","isiZulu","Zulu","latin"],
+["ha","Hausa","Hausa","latin"],["yo","Yorùbá","Yoruba","latinx"],["ig","Igbo","Igbo","latinx"],
+["pl","Polski","Polish","latinx"],["cs","Čeština","Czech","latinx"],["sk","Slovenčina","Slovak","latinx"],
+["hu","Magyar","Hungarian","latinx"],["ro","Română","Romanian","latinx"],["tr","Türkçe","Turkish","latinx"],
+["hr","Hrvatski","Croatian","latinx"],["sl","Slovenščina","Slovenian","latinx"],["lt","Lietuvių","Lithuanian","latinx"],
+["lv","Latviešu","Latvian","latinx"],["et","Eesti","Estonian","latinx"],["is","Íslenska","Icelandic","latinx"],
+["mt","Malti","Maltese","latinx"],["az","Azərbaycanca","Azerbaijani","latinx"],["tk","Türkmençe","Turkmen","latinx"],
+["sr","Српски","Serbian","cyrillic"],["bg","Български","Bulgarian","cyrillic"],["mk","Македонски","Macedonian","cyrillic"],
+["mn","Монгол","Mongolian","cyrillic"],["ky","Кыргызча","Kyrgyz","cyrillic"],["tg","Тоҷикӣ","Tajik","cyrillic"],
+["uk","Українська","Ukrainian","cyrillicx"],["be","Беларуская","Belarusian","cyrillicx"],["kk","Қазақша","Kazakh","cyrillicx"],
+["fa","فارسی","Persian","arabic"],["ur","اردو","Urdu","arabic"],["ps","پښتو","Pashto","arabic"],
+["ku","کوردی","Kurdish","arabic"],["ug","ئۇيغۇرچە","Uyghur","arabic"],["sd","سنڌي","Sindhi","arabic"],
+["he","עברית","Hebrew","hebrew"],["yi","ייִדיש","Yiddish","hebrew"],
+["mr","मराठी","Marathi","devanagari"],["ne","नेपाली","Nepali","devanagari"],["sa","संस्कृतम्","Sanskrit","devanagari"],
+["bn","বাংলা","Bengali","bengali"],["as","অসমীয়া","Assamese","bengali"],
+["pa","ਪੰਜਾਬੀ","Punjabi","gurmukhi"],["gu","ગુજરાતી","Gujarati","gujarati"],
+["ta","தமிழ்","Tamil","tamil"],["te","తెలుగు","Telugu","telugu"],["kn","ಕನ್ನಡ","Kannada","kannada"],
+["ml","മലയാളം","Malayalam","malayalam"],["si","සිංහල","Sinhala","sinhala"],
+["km","ខ្មែរ","Khmer","khmer"],["lo","ລາວ","Lao","lao"],["my","မြန်မာ","Burmese","myanmar"],
+["ka","ქართული","Georgian","georgian"],["hy","Հայերեն","Armenian","armenian"],["am","አማርኛ","Amharic","ethiopic"],
+["so","Soomaali","Somali","latin"],["st","Sesotho","Sesotho","latin"],["sn","chiShona","Shona","latin"],
+["ny","Chichewa","Chichewa","latin"],["xh","isiXhosa","Xhosa","latin"],["mg","Malagasy","Malagasy","latin"],
+["mi","Māori","Maori","latin"],["sm","Gagana Samoa","Samoan","latin"],["haw","ʻŌlelo Hawaiʻi","Hawaiian","latin"],
+["co","Corsu","Corsican","latin"],["fy","Frysk","Frisian","latin"],["lb","Lëtzebuergesch","Luxembourgish","latin"],
+["jv","Basa Jawa","Javanese","latin"],["su","Basa Sunda","Sundanese","latin"],["ceb","Cebuano","Cebuano","latin"],
+["ht","Kreyòl Ayisyen","Haitian Creole","latin"],["la","Latina","Latin","latin"],["eo","Esperanto","Esperanto","latin"],
+["gd","Gàidhlig","Scots Gaelic","latin"],["rw","Kinyarwanda","Kinyarwanda","latin"],["om","Afaan Oromoo","Oromo","latin"],
+["ts","Xitsonga","Tsonga","latin"],["nso","Sepedi","Sepedi","latin"],["uz","Oʻzbekcha","Uzbek","latinx"],
+["sq","Shqip","Albanian","latinx"],["bs","Bosanski","Bosnian","latinx"],["kri","Krio","Krio","latinx"],
+["vi","Tiếng Việt","Vietnamese","vietnamese"],
+["ckb","کوردیی ناوەندی","Kurdish (Sorani)","arabic"],
+["doi","डोगरी","Dogri","devanagari"],["bho","भोजपुरी","Bhojpuri","devanagari"],["mai","मैथिली","Maithili","devanagari"],
+["or","ଓଡ଼ିଆ","Odia","odia"],["ti","ትግርኛ","Tigrinya","ethiopic"],["dv","ދިވެހި","Dhivehi","thaana"],
+["zh-Hant","繁體中文","Chinese (Traditional)","hant"]
+];
+const CATALOG=CATALOG_RAW.map(([code,label,en,sk])=>{const S=SCRIPTS[sk]||SCRIPTS.latin;
+  return {code,label,en,needs:S.needs,dir:S.dir||"ltr",sample:S.sample};});
+
+/* ===== state ===== */
+const state={fontQuery:"",langs:["en","vi"],langOn:new Set(["en","vi"]),viewLang:"en",dir:"ltr",selected:["Inter"],tpl:"filter",scale:1,textCase:"none",customFonts:[]};
+const loaded=new Set();
+const ALL_LANG=BASE_LANGS.concat(CATALOG);
+
+/* ===== helpers ===== */
+const $=s=>document.querySelector(s);
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function famParam(n){return n.replace(/ /g,"+");}
+function allFonts(){return FONTS.concat(state.customFonts);}
+function fontObj(n){return allFonts().find(f=>f.n===n);}
+function famStr(n){const f=fontObj(n);return `'${n}', ${f?FALLBACK[f.cat]:'sans-serif'}`;}
+function gfLink(n){return `https://fonts.google.com/specimen/${famParam(n)}`;}
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),1900);}
+function loadFont(f){if(!f||loaded.has(f.n))return;loaded.add(f.n);const l=document.createElement("link");l.rel="stylesheet";l.href=`https://fonts.googleapis.com/css2?family=${famParam(f.n)}:wght@${f.w.join(";")}&display=swap`;document.head.appendChild(l);}
+function loadCustomFont(name){const k="__c_"+name;if(loaded.has(k))return;loaded.add(k);[400,700].forEach(wt=>{const l=document.createElement("link");l.rel="stylesheet";l.href=`https://fonts.googleapis.com/css2?family=${famParam(name)}:wght@${wt}&display=swap`;document.head.appendChild(l);});}
+function loadAnyFont(f){if(!f)return;f.custom?loadCustomFont(f.n):loadFont(f);}
+function parseFontInput(str){str=(str||"").trim();if(!str)return"";let m=str.match(/(?:[?&]|selection\.)family=([^&]+)/i);if(m){let f=decodeURIComponent(m[1]).split(":")[0];return f.replace(/\+/g," ").trim();}m=str.match(/fonts\.google\.com\/specimen\/([^/?#]+)/i);if(m)return decodeURIComponent(m[1]).replace(/\+/g," ").trim();return str.replace(/\s+/g," ").trim();}
+function addCustomFont(name){const ex=allFonts().find(f=>f.n.toLowerCase()===name.toLowerCase());if(ex)return ex;const f={n:name,cat:"sans",s:[],w:[400,700],custom:true};state.customFonts.push(f);loadCustomFont(name);return f;}
+
+function langDef(code){return ALL_LANG.find(l=>l.code===code);}
+function langName(d){return d?(d.en||d.label):"";}
+function onLangs(){return state.langs.filter(c=>state.langOn.has(c)).map(langDef).filter(Boolean);}
+function curLang(){const on=onLangs();if(state.viewLang&&state.langOn.has(state.viewLang)){const d=langDef(state.viewLang);if(d)return d;}return on[0]||langDef(state.langs[0])||BASE_LANGS[0];}
+function fontSupportsLang(f,def){if(!f||!def)return false;if(f.custom)return null;if(!def.needs||def.needs==="latin")return true;return f.s.includes(def.needs);}
+function langBundle(def){if(def.b)return def.b;const t=def.sample||def.label;const head=(t.split(/[.!?。]/)[0]||t).trim();
+  return {title:head.slice(0,18)||t.slice(0,18),tag:t.slice(0,64),sec:head.slice(0,16)||t.slice(0,16),body:t,nav:["Home","Search","Profile"],b1:"Start",b2:"More",stat:"views",list:[[t.slice(0,18),"—","12.4K"],[t.slice(0,14),"—","248"],[t.slice(0,20),"—","On"]],eyebrow:head.slice(0,16),feat:[[head.slice(0,10),"—",t.slice(0,42)],[head.slice(0,10),"—",t.slice(0,42)],[head.slice(0,10),"—",t.slice(0,42)]]};}
+
+/* ===== font input + gợi ý (gộp tên + link) ===== */
+const fi=$("#fontInput"),sg=$("#suggest");
+function renderSuggest(){const q=state.fontQuery.trim().toLowerCase();
+  if(!q){sg.classList.remove("show");return;}
+  const isLink=/https?:|fonts\.google/i.test(q);
+  const matches=FONTS.filter(f=>f.n.toLowerCase().includes(q)).slice(0,8);
+  let html=matches.map(f=>`<div class="sitem" data-name="${esc(f.n)}"><span class="sn">${esc(f.n)}</span><span class="sc">${CAT[f.cat]}</span></div>`).join("");
+  if(!matches.length||isLink){const nm=parseFontInput(state.fontQuery);
+    html+=`<div class="sitem slink" data-add="1">${isLink?'Lấy font từ link':'Thêm'} “<b>${esc(nm)}</b>” từ Google Fonts →</div>`;}
+  sg.innerHTML=html;sg.classList.add("show");}
+fi.addEventListener("input",e=>{state.fontQuery=e.target.value;renderSuggest();});
+fi.addEventListener("focus",()=>{if(state.fontQuery.trim())renderSuggest();});
+fi.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addFromInput();}if(e.key==="Escape")sg.classList.remove("show");});
+document.addEventListener("click",e=>{if(!e.target.closest(".fontbox"))sg.classList.remove("show");});
+sg.addEventListener("click",e=>{const it=e.target.closest(".sitem");if(!it)return;
+  if(it.dataset.name)addFont(it.dataset.name);else addFromInput();});
+$("#fontAddBtn").onclick=addFromInput;
+function addFromInput(){const v=fi.value.trim();if(!v){fi.focus();toast("Gõ tên font hoặc dán link");return;}
+  const known=FONTS.find(f=>f.n.toLowerCase()===v.toLowerCase());
+  if(known){addFont(known.n);return;}
+  const name=parseFontInput(v);const f=addCustomFont(name);addFont(f.n);}
+function addFont(name){const f=fontObj(name)||addCustomFont(name);loadAnyFont(f);
+  if(!state.selected.includes(f.n))state.selected.push(f.n);
+  state.fontQuery="";fi.value="";sg.classList.remove("show");renderAll();
+  toast(`Đã thêm "${f.n}" vào demo`);}
+
+/* ===== language chips: bấm vào chip = chọn (tô màu) / bỏ chọn (mất màu) ===== */
+function buildLangChips(){const lc=$("#langChips");
+  let html=state.langs.map(code=>{const d=langDef(code);if(!d)return"";
+    const on=state.langOn.has(code),vn=code==="vi";
+    return `<span class="lchip ${vn?'vn':''}" aria-pressed="${on}" title="Bấm để ${on?'bỏ chọn':'chọn'} ${esc(langName(d))}">
+      <span class="pl" data-pl="${code}">${esc(langName(d))}</span><span class="x" data-rm="${code}" title="Xóa khỏi danh sách">✕</span></span>`;}).join("");
+  html+=`<button class="chip-add" id="addLangBtn">＋ Thêm ngôn ngữ</button>`;
+  lc.innerHTML=html;}
+$("#langChips").addEventListener("click",e=>{
+  const pl=e.target.closest("[data-pl]"),rm=e.target.closest("[data-rm]"),add=e.target.closest("#addLangBtn");
+  if(add){openLangPanel();return;}
+  if(rm){const c=rm.dataset.rm;state.langs=state.langs.filter(x=>x!==c);state.langOn.delete(c);renderAll();return;}
+  if(pl){const c=pl.dataset.pl;if(state.langOn.has(c))state.langOn.delete(c);else state.langOn.add(c);renderAll();}});
+
+/* ===== panel thêm ngôn ngữ — một bước ===== */
+function openLangPanel(){$("#lpSearch").value="";buildLangGrid("");$("#langPanel").classList.add("open");$("#pasteLangs").focus();}
+$("#lpClose").onclick=()=>$("#langPanel").classList.remove("open");
+function addLangCodes(codes){let n=0;codes.forEach(c=>{if(!state.langs.includes(c)){state.langs.push(c);n++;}state.langOn.add(c);});return n;}
+function buildLangGrid(q){const g=$("#lgrid");q=(q||"").trim().toLowerCase();
+  const avail=ALL_LANG.filter(d=>!state.langs.includes(d.code)&&(!q||langName(d).toLowerCase().includes(q)||d.label.toLowerCase().includes(q)));
+  if(!avail.length){g.innerHTML=`<div style="grid-column:1/-1;color:var(--muted);font-size:13px;padding:10px">Không còn ngôn ngữ khớp.</div>`;return;}
+  g.innerHTML=avail.map(d=>{const sub=d.needs?(LANG[d.needs]?LANG[d.needs].vi:d.needs):"";
+    return `<div class="lopt" data-code="${d.code}"><span class="nm">${esc(langName(d))}</span><span class="sub">${esc(sub)}</span></div>`;}).join("");}
+$("#lgrid").addEventListener("click",e=>{const o=e.target.closest(".lopt");if(!o)return;
+  addLangCodes([o.dataset.code]);buildLangGrid($("#lpSearch").value);buildLangChips();renderLangStatus();renderStage();
+  toast(`Đã thêm ${langName(langDef(o.dataset.code))}`);});
+$("#lpSearch").addEventListener("input",e=>buildLangGrid(e.target.value));
+/* dán list → bấm Thêm là xong */
+function matchLang(token){const t=token.trim().toLowerCase();if(!t)return null;const pool=BASE_LANGS.concat(CATALOG);
+  let f=pool.find(d=>d.code.toLowerCase()===t||(d.en&&d.en.toLowerCase()===t)||d.label.toLowerCase()===t);
+  if(f)return f;f=pool.find(d=>(d.en&&d.en.toLowerCase().includes(t))||d.label.toLowerCase().includes(t));return f||null;}
+function doPasteLangs(){const raw=$("#pasteLangs").value;if(!raw.trim()){toast("Dán danh sách ngôn ngữ");return;}
+  const tokens=raw.split(/[,;\n\u3001\uFF0C]/).map(s=>s.trim()).filter(Boolean);
+  const codes=[],miss=[];tokens.forEach(tk=>{const m=matchLang(tk);if(m){if(!codes.includes(m.code))codes.push(m.code);}else miss.push(tk);});
+  const n=addLangCodes(codes);$("#pasteLangs").value="";$("#langPanel").classList.remove("open");renderAll();
+  toast(`Đã thêm ${n} ngôn ngữ${miss.length?` · không nhận ra: ${miss.slice(0,4).join(", ")}`:""}`);}
+$("#pasteAdd").onclick=doPasteLangs;
+$("#pasteLangs").addEventListener("keydown",e=>{if(e.key==="Enter")doPasteLangs();});
+
+/* ===== stage ===== */
+function renderStage(){const box=$("#stage");
+  if(!state.selected.length){box.innerHTML=`<div class="stage-empty"><b>Chưa có font nào</b>Gõ tên font hoặc dán link Google Fonts ở ô “Thêm font” phía trên để bắt đầu.</div>`;return;}
+  const L=curLang(),B=langBundle(L),dir=L.dir||"ltr";
+  const csClass=state.textCase==="upper"?"cs-upper":state.textCase==="lower"?"cs-lower":"";
+  const onL=onLangs();
+  box.innerHTML=state.selected.map(name=>{const f=fontObj(name);loadAnyFont(f);
+    let note="";
+    if(f&&f.custom){
+      note=`<div class="demo-note neutral">Font tùy chỉnh — chưa rõ subset. Nhìn trực tiếp: chữ ra ô vuông tức là không hỗ trợ ngôn ngữ đó.</div>`;
+    }else if(f){
+      const pills=onL.map(d=>{const ok=fontSupportsLang(f,d)!==false;
+        return `<span class="lpill ${ok?'ok':'no'}">${ok?'✓':'✕'} ${esc(langName(d))}</span>`;}).join("")||`<span class="lpill no">Chưa chọn ngôn ngữ nào</span>`;
+      const miss=onL.filter(d=>fontSupportsLang(f,d)===false).map(d=>langName(d));
+      const summary=miss.length
+        ? `<div class="note-sum no">⚠ <b>${esc(name)}</b> KHÔNG đáp ứng: <b>${miss.map(esc).join(", ")}</b> — sẽ hiển thị lỗi.</div>`
+        : `<div class="note-sum ok">✓ <b>${esc(name)}</b> đáp ứng đầy đủ ${onL.length} ngôn ngữ đang chọn.</div>`;
+      note=`<div class="demo-note"><div class="lpills">${pills}</div>${summary}</div>`;
+    }
+    const rootStyle=`--head-font:${famStr(name)};--body-font:${famStr(name)};font-size:${16*state.scale}px`;
+    const tpl=(TPL[state.tpl]||tplFilter)(B);
+    return `<div class="demo">
+      <div class="demo-head">
+        <div class="dn">${esc(name)}<span>${f&&f.custom?'Google Fonts':(f?CAT[f.cat]:'')}</span></div>
+        <div class="demo-actions">
+          <button data-act="zoom" data-name="${esc(name)}">⤢ Phóng to</button>
+          <a href="${gfLink(name)}" target="_blank" rel="noopener">↗ Google Fonts</a>
+          <button data-act="copy" data-name="${esc(name)}">⧉ Code</button>
+          <button data-act="remove" data-name="${esc(name)}">✕ Bỏ</button>
+        </div>
+      </div>${note}
+      <div class="demo-body"><div class="mock-root ${csClass}" dir="${dir}" style="${rootStyle}">${tpl}</div></div>
+    </div>`;}).join("");}
+$("#stage").addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)return;
+  if(b.dataset.act==="remove"){state.selected=state.selected.filter(n=>n!==b.dataset.name);renderAll();}
+  else if(b.dataset.act==="zoom"){openZoom(b.dataset.name);}
+  else copyCode(b.dataset.name,b);});
+
+/* ===== phóng to một màn preview ===== */
+let zoomFont=null;
+function openZoom(name){zoomFont=name;$("#zoom").classList.add("open");$("#zoom").setAttribute("aria-hidden","false");document.body.style.overflow="hidden";renderZoom();}
+function closeZoom(){$("#zoom").classList.remove("open");$("#zoom").setAttribute("aria-hidden","true");document.body.style.overflow="";}
+function renderZoom(){const name=zoomFont,f=fontObj(name);if(!f)return;loadAnyFont(f);
+  $("#zoomFonts").innerHTML=state.selected.map(n=>`<button class="zf ${n===name?'act':''}" data-zf="${esc(n)}">${esc(n)}</button>`).join("");
+  const on=onLangs(),cur=curLang();
+  $("#zoomLangs").innerHTML=on.length>1?on.map(d=>`<button class="zl ${d.code===cur.code?'act':''}" data-zl="${d.code}">${esc(langName(d))}</button>`).join(""):"";
+  const L=cur,B=langBundle(L),dir=L.dir||"ltr";
+  const csClass=state.textCase==="upper"?"cs-upper":state.textCase==="lower"?"cs-lower":"";
+  const z=+$("#zoomScale").value/100;
+  const rootStyle=`--head-font:${famStr(name)};--body-font:${famStr(name)};font-size:16px;zoom:${z}`;
+  $("#zoomStage").innerHTML=`<div class="mock-root ${csClass}" dir="${dir}" style="${rootStyle}">${(TPL[state.tpl]||tplFilter)(B)}</div>`;}
+$("#zoomClose").onclick=closeZoom;
+$("#zoom").addEventListener("click",e=>{if(e.target.id==="zoom"){closeZoom();return;}
+  const zf=e.target.closest("[data-zf]");if(zf){zoomFont=zf.dataset.zf;renderZoom();return;}
+  const zl=e.target.closest("[data-zl]");if(zl){state.viewLang=zl.dataset.zl;renderZoom();renderStage();renderViewLangs();}});
+$("#zoomScale").addEventListener("input",e=>{$("#zoomScaleVal").textContent=e.target.value+"%";if($("#zoom").classList.contains("open"))renderZoom();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#zoom").classList.contains("open"))closeZoom();});
+
+/* ===== templates: 5 dạng app mobile ===== */
+const ICOL=['#f472b6','#818cf8','#34d399','#fb923c','#a78bfa','#38bdf8','#f87171','#fbbf24'];
+function pick(B,n){const w=[B.list[0][0],B.list[1][0],B.list[2][0],B.feat[0][0],B.feat[1][0],B.feat[2][0],B.sec,B.b2,B.title,B.nav[0],B.nav[1],B.nav[2],B.b1];const r=[];for(let i=0;i<n;i++)r.push(w[i%w.length]);return r;}
+function grad(i){return `linear-gradient(135deg,${ICOL[i%ICOL.length]},${ICOL[(i+3)%ICOL.length]})`;}
+function gtile(x,i){return `<div class="gtile"><div class="gico" style="background:${grad(i)}"></div><span>${esc(x)}</span></div>`;}
+
+function tplFilter(B){const w=pick(B,8);
+ return `<div class="phone app-filter">
+  <div class="st-bar"><span>12:30</span><span>●●● ⌃ ▮</span></div>
+  <div class="af-top"><div class="af-search">🔎 ${esc(B.tag.slice(0,18))}</div><div class="af-vip">♛ VIP</div></div>
+  <div class="af-hero"><div class="af-ht"><h1>${esc(B.title)}</h1><div class="af-sub">${esc(B.sec)}</div><div class="af-cta">${esc(B.b1)} ›</div></div><div class="af-himg"></div></div>
+  <div class="af-cards"><div class="af-card c1"><div><b>${esc(B.list[0][0])}</b><span>${esc(B.list[0][1])}</span></div><div class="af-cico"></div></div><div class="af-card c2"><div><b>${esc(B.list[1][0])}</b><span>${esc(B.list[1][1])}</span></div><div class="af-cico"></div></div></div>
+  <div class="af-g4">${w.slice(0,4).map((x,i)=>gtile(x,i)).join("")}</div>
+  <div class="af-g8">${w.map((x,i)=>gtile(x,i+1)).join("")}</div>
+  <div class="af-tabs"><span class="act">${esc(B.nav[0])}</span><span>${esc(B.nav[1])}</span><span>${esc(B.nav[2])}</span></div>
+  <div class="af-tpls"><div class="af-tpl"><div class="ph"></div><div class="af-tc"><b>${esc(B.list[0][0])}</b><span>617.8K</span></div></div><div class="af-tpl"><div class="ph"></div><div class="af-tc"><b>${esc(B.list[1][0])}</b><span>432.5K</span></div></div></div>
+  <div class="ph-nav light"><span class="act">${esc(B.nav[0])}</span><span>${esc(B.nav[1])}</span><span class="cam">◉</span><span>${esc(B.b2)}</span><span>${esc(B.nav[2])}</span></div>
+ </div>`;}
+
+function tplPrank(B){const w=pick(B,6);
+ return `<div class="phone app-prank">
+  <div class="pk-top"><div class="pk-coins">🪙 12,450 <b>+</b></div><div class="pk-ics"><span>📅</span><span>⚙</span></div></div>
+  <h1 class="pk-title">${esc(B.title)}</h1>
+  <div class="pk-side"><div class="pk-sb"><div class="pk-sbi"></div><span>${esc(B.list[0][0]).slice(0,9)}</span></div><div class="pk-sb"><div class="pk-sbi"></div><span>${esc(B.list[1][0]).slice(0,9)}</span></div><div class="pk-sb"><div class="pk-sbi"></div><span>${esc(B.b2).slice(0,9)}</span></div></div>
+  <div class="pk-play">${esc(B.b1)}</div>
+  <div class="pk-more">${esc(B.sec)}</div>
+  <div class="pk-grid">${w.map((x,i)=>`<div class="pk-tile" style="background:${grad(i)}"><div class="pk-ti"></div><span>${esc(x)}</span></div>`).join("")}</div>
+  <div class="ph-nav game"><span>${esc(B.nav[0])}</span><span>${esc(B.nav[1])}</span><span class="vip">♛</span><span>${esc(B.b2)}</span><span>${esc(B.nav[2])}</span></div>
+ </div>`;}
+
+function tplPersonalize(B){const li=B.list;
+ return `<div class="phone app-perso">
+  <div class="st-bar"><span>9:41</span><span>●●● ⌃ ▮</span></div>
+  <div class="pe-head"><div><h1>${esc(B.title)} 🌸</h1><div class="pe-sub">${esc(B.tag)}</div></div><div class="pe-bell">🔔</div></div>
+  <div class="pe-quote"><div class="pe-qmark">“</div><div class="pe-qt">${esc(B.body.slice(0,68))}</div><div class="pe-qimg"></div></div>
+  <div class="pe-sec"><h2>${esc(B.sec)}</h2><a>See all</a></div>
+  <div class="pe-plan">${li.map((it,i)=>`<div class="pe-pcard p${i}"><div class="pe-pico"></div><b>${esc(it[0])}</b><span>${esc(it[1])}</span><div class="pe-prog">0/1 ✓</div></div>`).join("")}</div>
+  <div class="pe-sec"><h2>${esc(B.b2)}</h2><a>See all</a></div>
+  <div class="pe-explore">${[B.feat[0][0],B.feat[1][0],B.feat[2][0],B.nav[2]].map((x,i)=>gtile(x,i)).join("")}</div>
+  <div class="pe-insp"><div class="pe-sun">☀</div><div>${esc((B.feat[2][2]||B.body).slice(0,46))}</div></div>
+  <div class="ph-nav light"><span class="act">${esc(B.nav[0])}</span><span>${esc(B.b2)}</span><span>${esc(B.nav[1])}</span><span>${esc(B.list[1][0]).slice(0,7)}</span><span>${esc(B.nav[2])}</span></div>
+ </div>`;}
+
+function tplToolApp(B){const w=pick(B,8);
+ return `<div class="phone app-tool2">
+  <div class="st-bar"><span>9:41</span><span>●●● ⌃ ▮</span></div>
+  <div class="to-head"><div class="to-logo"></div><h1>${esc(B.title)}</h1><div class="to-av"></div></div>
+  <div class="to-search">🔎 <span>${esc(B.tag.slice(0,16))}</span><div class="to-flt"></div></div>
+  <div class="to-feat"><div class="to-ft"><div class="to-tag">Featured</div><h2>${esc(B.sec)}</h2><p>${esc(B.body.slice(0,38))}</p><div class="to-fbtn">${esc(B.b1)} →</div></div><div class="to-fimg"></div></div>
+  <div class="to-grid">${w.map((x,i)=>gtile(x,i)).join("")}</div>
+  <div class="pe-sec"><h2>${esc(B.b2)}</h2><a>View all</a></div>
+  <div class="to-recent">${B.list.map((it,i)=>`<div class="to-rc"><div class="gico sm" style="background:${grad(i)}"></div><div><b>${esc(it[0])}</b><span>${esc(it[1])}</span></div><span class="to-ago">${i+1}m</span></div>`).join("")}</div>
+  <div class="to-stats"><div class="to-ring"><b>24</b><span>${esc(B.feat[0][0]).slice(0,8)}</span></div><div class="to-sk"><div><b>4h32m</b><span>${esc(B.feat[0][2]||'Saved').slice(0,8)}</span></div><div><b>36</b><span>${esc(B.feat[1][0]).slice(0,8)}</span></div><div><b>12</b><span>${esc(B.feat[2][0]).slice(0,8)}</span></div></div></div>
+  <div class="ph-nav light"><span class="act">${esc(B.nav[0])}</span><span>${esc(B.b2)}</span><span>${esc(B.nav[1])}</span><span>${esc(B.nav[2])}</span></div>
+ </div>`;}
+
+function tplEntertainment(B){const w=pick(B,5);
+ return `<div class="phone app-ent">
+  <div class="st-bar light"><span>9:41</span><span>●●● ⌃ ▮</span></div>
+  <div class="en-head"><div class="en-av"></div><div class="en-hi"><b>${esc(B.title)}</b><div class="en-lv">Lv.23<i></i></div></div><div class="en-gem">💎 1,250 +</div></div>
+  <div class="en-hero"><div class="en-ht"><h1>${esc(B.sec)}</h1><div class="en-nu">${esc(B.b2)}</div><div class="en-hs">${esc(B.tag.slice(0,38))}</div><div class="en-play">${esc(B.b1)}</div></div></div>
+  <div class="en-quick">${w.map((x,i)=>`<div class="en-q"><div class="en-qi" style="background:${grad(i)}"></div><span>${esc(x)}</span></div>`).join("")}</div>
+  <div class="en-sec"><h2>🎮 ${esc(B.feat[0][0])}</h2><a>See all ›</a></div>
+  <div class="en-cards">${[B.list[0],B.list[1],B.list[2],B.list[0]].map((it,i)=>`<div class="en-card"><div class="en-ci" style="background:${grad(i)}"></div><b>${esc(it[0])}</b><span>${esc(it[1])}</span><div class="en-rate">★ 4.${6-(i%3)}</div></div>`).join("")}</div>
+  <div class="en-sec"><h2>🔥 ${esc(B.feat[1][0])}</h2><a>See all ›</a></div>
+  <div class="en-trend">${B.list.map((it,i)=>`<div class="en-tr"><span class="en-rk">${i+1}</span><div class="en-ti" style="background:${grad(i)}"></div><div><b>${esc(it[0])}</b><span>★ 4.${5+i}</span></div></div>`).join("")}</div>
+  <div class="ph-nav game"><span class="act">${esc(B.nav[0])}</span><span>${esc(B.feat[0][0]).slice(0,7)}</span><span>${esc(B.nav[1])}</span><span>${esc(B.b2)}</span><span>${esc(B.nav[2])}</span></div>
+ </div>`;}
+
+const TPL={filter:tplFilter,prank:tplPrank,personalize:tplPersonalize,tool:tplToolApp,entertainment:tplEntertainment};
+
+/* ===== templates cũ (giữ lại) ===== */
+function tplFeed(B){const n=B.nav,li=B.list;
+  return `<div class="phone"><div class="status"><span>9:41</span><span>● ▮▮▮ ⌁</span></div><div class="scr">
+    <div class="greet">${esc(B.title)}</div><div class="tag">${esc(B.tag)}</div>
+    <div class="hero-card"><div class="ph"></div><div class="cc"><h3>${esc(B.sec)}</h3><p>${esc(B.body.slice(0,70))}</p>
+      <div class="st"><div><b>12.4K</b>${esc(B.stat)}</div><div><b>4.9</b>★ 1,208</div></div></div></div>
+    <div class="sec"><h2>${esc(B.sec)}</h2><a>＋</a></div>
+    ${li.map(it=>`<div class="listitem"><div class="av"></div><div><div class="ti">${esc(it[0])}</div><div class="su">${esc(it[1])}</div></div><div class="num">${esc(it[2])}</div></div>`).join("")}
+    <div class="btns"><button class="btn-p">${esc(B.b1)}</button><button class="btn-s">${esc(B.b2)}</button></div>
+    <div class="nav"><span class="act">${esc(n[0])}</span><span>${esc(n[1])}</span><span>${esc(n[2])}</span></div></div></div>`;}
+function tplChat(B){return `<div class="phone">
+  <div class="chat-head"><div class="av"></div><div><div class="nm">${esc(B.title)}</div><div class="stt">● online</div></div></div>
+  <div class="chat-body">
+    <div class="bub in">${esc(B.tag)}<span class="tm">09:24</span></div>
+    <div class="bub out">${esc(B.b1)} 👍<span class="tm">09:25</span></div>
+    <div class="bub in">${esc(B.body)}<span class="tm">09:26</span></div>
+    <div class="bub out">${esc(B.sec)} — 0987 654 321<span class="tm">09:27</span></div>
+  </div>
+  <div class="chat-input"><div class="box">${esc(B.b2)}…</div><button class="snd">➤</button></div></div>`;}
+function tplProfile(B){const n=B.nav,li=B.list;
+  return `<div class="phone"><div class="prof">
+    <div class="av"></div><h1>${esc(B.title)}</h1><div class="handle">@${esc(B.title).toLowerCase().replace(/\s+/g,"")}</div>
+    <div class="bio">${esc(B.body)}</div>
+    <div class="stats"><div><div class="n">1,208</div><div class="l">${esc(li[0][0])}</div></div><div><div class="n">348</div><div class="l">${esc(li[1][0])}</div></div><div><div class="n">12.4K</div><div class="l">${esc(B.stat)}</div></div></div>
+    <div class="btns"><button class="btn-p">${esc(B.b1)}</button><button class="btn-s">${esc(B.b2)}</button></div>
+    <div class="tabs"><span class="act">${esc(n[0])}</span><span>${esc(n[1])}</span><span>${esc(n[2])}</span></div>
+    <div class="grid"><div></div><div></div><div></div><div></div><div></div><div></div></div></div></div>`;}
+function tplMusic(B){const li=B.list;
+  return `<div class="phone"><div class="music"><div class="art"></div>
+    <h1>${esc(B.title)}</h1><div class="artist">${esc(B.sec)}</div>
+    <div class="bar"></div><div class="times"><span>1:24</span><span>-2:38</span></div>
+    <div class="ctrl"><span>⏮</span><span class="play">▶</span><span>⏭</span></div>
+    <div class="next"><div class="sec" style="margin-bottom:6px"><h2 style="font-size:.95em">${esc(B.b2)}</h2></div>
+      ${li.map(it=>`<div class="listitem"><div class="av"></div><div><div class="ti">${esc(it[0])}</div><div class="su">${esc(it[1])}</div></div><div class="num">3:0${(it[0].length%9)}</div></div>`).join("")}
+    </div></div></div>`;}
+function tplSettings(B){const li=B.list,n=B.nav;
+  return `<div class="phone"><div class="settings"><h1>${esc(B.title)}</h1>
+    <div class="grp">${esc(B.sec)}</div>
+    ${li.map(it=>`<div class="row"><div class="ic"></div><div class="t">${esc(it[0])}</div><div class="v">${esc(it[2])}</div></div>`).join("")}
+    <div class="grp">${esc(B.b2)}</div>
+    ${n.map(x=>`<div class="row"><div class="ic"></div><div class="t">${esc(x)}</div><div class="v">›</div></div>`).join("")}
+  </div></div>`;}
+function tplLogin(B){const li=B.list;
+  return `<div class="phone"><div class="login">
+    <h1>${esc(B.title)}</h1><div class="sub">${esc(B.tag)}</div>
+    <div class="fld"><label>${esc(li[0][0])}</label><div class="inp">name@email.com</div></div>
+    <div class="fld"><label>${esc(li[2][0])}</label><div class="inp">••••••••</div></div>
+    <button class="btn-p">${esc(B.b1)}</button>
+    <div class="alt">${esc(B.b2)} · <b>${esc(B.sec)}</b></div></div></div>`;}
+function tplShop(B){
+  return `<div class="phone"><div class="shop"><div class="img"></div><div class="body">
+    <div class="cat">${esc(B.eyebrow)}</div><h1>${esc(B.title)}</h1>
+    <div class="price">$48.00</div><div class="rate">★★★★☆ 4.8 · 1,208</div>
+    <div class="desc">${esc(B.body)}</div>
+    <div class="btns"><button class="btn-p">${esc(B.b1)}</button><button class="btn-s">${esc(B.b2)}</button></div>
+  </div></div></div>`;}
+function tplDash(B){const n=B.nav,li=B.list;
+  return `<div class="dash"><div class="side"><div class="logo">${esc(B.title)}</div>
+    <span class="nv act">${esc(n[0])}</span><span class="nv">${esc(B.sec)}</span><span class="nv">${esc(n[1])}</span><span class="nv">${esc(n[2])}</span></div>
+    <div class="main"><h1>${esc(B.sec)}</h1><div class="sub">${esc(B.tag)}</div>
+    <div class="kpis"><div class="kpi"><div class="l">${esc(B.stat)}</div><div class="v">128.4K</div><div class="d">▲ 12.5%</div></div>
+      <div class="kpi"><div class="l">${esc(li[1][0])}</div><div class="v">8,240</div><div class="d">▲ 4.2%</div></div>
+      <div class="kpi"><div class="l">${esc(li[2][0])}</div><div class="v">$36.9K</div><div class="d">▲ 9.1%</div></div></div>
+    <div class="dtable"><div class="r"><div class="c1">${esc(li[0][0])}</div><div class="c2">${esc(B.b2)}</div><div class="c3">${esc(B.stat)}</div></div>
+      ${li.map(it=>`<div class="r"><div class="c1">${esc(it[0])}</div><div class="c2">${esc(it[1])}</div><div class="c3">${esc(it[2])}</div></div>`).join("")}</div>
+    <div class="btns" style="max-width:320px"><button class="btn-p">${esc(B.b1)}</button><button class="btn-s">${esc(B.b2)}</button></div></div></div>`;}
+function tplLanding(B){const fe=B.feat;
+  return `<div class="landing"><div class="eyebrow">${esc(B.eyebrow)}</div>
+    <h1>${esc(B.title)} — ${esc(B.tag.replace(/[.。]$/,""))}</h1>
+    <p class="lead">${esc(B.body)}</p>
+    <div class="cta"><button class="btn-p">${esc(B.b1)}</button><button class="btn-s">${esc(B.b2)}</button></div>
+    <div class="feats">${fe.map(f=>`<div class="feat"><div class="fn">${esc(f[0])}</div><h3>${esc(f[1])}</h3><p>${esc(f[2])}</p></div>`).join("")}</div></div>`;}
+Object.assign(TPL,{feed:tplFeed,chat:tplChat,profile:tplProfile,music:tplMusic,settings:tplSettings,login:tplLogin,shop:tplShop,dash:tplDash,landing:tplLanding});
+
+/* ===== copy ===== */
+function copyCode(name,btn){const f=fontObj(name)||{n:name,w:[400,700],cat:"sans"};
+  const url=`https://fonts.googleapis.com/css2?family=${famParam(f.n)}:wght@${f.w.join(";")}&display=swap`;
+  const txt=`<!-- ${f.n} -->\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="${url}" rel="stylesheet">\n\n/* CSS */\nfont-family: '${f.n}', ${FALLBACK[f.cat||'sans']};`;
+  navigator.clipboard.writeText(txt).then(()=>{toast(`Đã copy code cho "${f.n}"`);if(btn){const o=btn.textContent;btn.textContent="✓ Đã copy";setTimeout(()=>btn.textContent=o,1400);}});}
+
+/* ===== controls ===== */
+$("#tplSel").onchange=e=>{state.tpl=e.target.value;renderStage();};
+$("#caseSeg").addEventListener("click",e=>{const b=e.target.closest("[data-cs]");if(!b)return;state.textCase=b.dataset.cs;
+  [...$("#caseSeg").children].forEach(c=>c.setAttribute("aria-pressed",c===b));renderStage();});
+$("#uiScale").addEventListener("input",e=>{state.scale=+e.target.value/100;$("#uiScaleVal").textContent=e.target.value+"%";document.querySelectorAll(".mock-root").forEach(r=>r.style.fontSize=(16*state.scale)+"px");});
+$("#themeBtn").onclick=()=>{const c=document.documentElement.getAttribute("data-theme");document.documentElement.setAttribute("data-theme",c==="dark"?"":"dark");};
+
+function renderLangStatus(){const el=$("#langStatus");
+  if(!state.selected.length){el.style.display="none";return;}
+  const defs=onLangs();
+  if(!defs.length){el.style.display="block";el.className="langstatus";el.innerHTML="";el.style.display="none";return;}
+  const issues=[];let hasCustom=false;
+  state.selected.forEach(name=>{const f=fontObj(name);if(!f)return;
+    if(f.custom){hasCustom=true;return;}
+    const miss=defs.filter(d=>fontSupportsLang(f,d)===false).map(d=>langName(d));
+    if(miss.length)issues.push(`<b>${esc(name)}</b> → ${miss.map(esc).join(", ")}`);});
+  el.style.display="block";
+  if(issues.length){el.className="langstatus err";
+    el.innerHTML=`⚠ Font đang chọn không hiển thị được: ${issues.join(" · ")}.${hasCustom?' (Font tùy chỉnh: chưa rõ subset.)':''}`;}
+  else{el.className="langstatus ok";
+    el.innerHTML=`✓ Font đang chọn đáp ứng đủ ${defs.length} ngôn ngữ đang chọn.${hasCustom?' (Trừ font tùy chỉnh chưa rõ subset.)':''}`;}}
+
+function renderViewLangs(){const el=$("#viewLangs");const on=onLangs();
+  if(!on.length){el.innerHTML=`<span class="vl-hint">Chưa có ngôn ngữ nào đang bật — bấm chip ngôn ngữ ở trên để bật.</span>`;return;}
+  const cur=curLang();
+  el.innerHTML=on.map(d=>`<button class="vlchip ${d.code===cur.code?'act':''}" data-vl="${d.code}">${esc(langName(d))}</button>`).join("")
+    +(on.length<2?`<span class="vl-hint">Bật thêm ngôn ngữ ở trên để xem thử nhiều thứ tiếng.</span>`:"");}
+$("#viewLangs").addEventListener("click",e=>{const b=e.target.closest("[data-vl]");if(!b)return;
+  state.viewLang=b.dataset.vl;renderStage();renderViewLangs();
+  if($("#zoom").classList.contains("open"))renderZoom();});
+
+function renderAll(){buildLangChips();renderLangStatus();renderViewLangs();renderStage();}
+
+/* ===== init ===== */
+loadAnyFont(fontObj("Inter"));
+renderAll();
+</script>
+</body>
+</html>
