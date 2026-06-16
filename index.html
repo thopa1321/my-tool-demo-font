@@ -116,13 +116,15 @@
   .lpill.ok{background:var(--ok-soft);color:var(--ok)}
   .lpill.no{background:var(--accent-soft);color:var(--accent-ink);text-decoration:line-through}
   .note-sum{font-size:13px}
-  .note-sum.ok{color:var(--ok)}.note-sum.no{color:var(--accent-ink)}
+  .note-sum+.note-sum{margin-top:4px}
+  .note-sum.ok{color:var(--ok)}.note-sum.no{color:var(--accent-ink)}.note-sum.neutral{color:var(--muted)}
   .demo-body{padding:24px;display:flex;justify-content:center;overflow:auto;background:linear-gradient(0deg,var(--line-soft),transparent)}
 
   .mock-root{font-family:var(--body-font,'Inter');color:#1d1b1a}
   .mock-root.cs-upper{text-transform:uppercase}
   .mock-root.cs-lower{text-transform:lowercase}
   .mock-root h1,.mock-root h2,.mock-root h3,.mock-root .display{font-family:var(--head-font,'Inter')}
+  .btn-p,.btn-s,.snd,.af-cta,.pk-play,.to-fbtn,.en-play,.en-q span,.af-vip{font-family:var(--cta-font,var(--head-font))}
   .phone{width:392px;max-width:100%;border:1px solid #e7e3dc;border-radius:34px;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.08);overflow:hidden}
   .phone .status{display:flex;justify-content:space-between;padding:14px 22px 4px;font-size:.72em;color:#8a857d;font-weight:600}
   .phone .scr{padding:8px 22px 0}
@@ -333,6 +335,22 @@
   .vlchip:hover{border-color:var(--accent)}
   .vlchip.act{background:var(--accent);border-color:var(--accent);color:#fff}
   .vl-hint{color:var(--muted);font-size:13px;align-self:center}
+  .demo.pair{border:1.5px solid var(--accent)}
+  .demo.pair .dn{color:var(--accent)}
+  .pair-ctrls{display:flex;gap:12px;flex-wrap:wrap;padding:13px 16px 2px}
+  .pair-ctrls label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;flex-direction:column;gap:5px}
+  .pair-ctrls select,.zpr select{font-family:var(--ui);font-size:13px;font-weight:600;text-transform:none;letter-spacing:0;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:9px;padding:8px 11px;cursor:pointer;min-width:140px}
+  .pair-ctrls select:focus,.zpr select:focus{outline:none;border-color:var(--accent)}
+  .zpr{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .zpr select{min-width:120px}
+  .prsel{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;flex-direction:column;gap:5px}
+  .prsel select{font-family:var(--ui);font-size:13px;font-weight:600;text-transform:none;letter-spacing:0;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:9px;padding:8px 11px;cursor:pointer;min-width:150px}
+  .prsel select:focus{outline:none;border-color:var(--accent)}
+  .fchip{display:inline-flex;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:999px;overflow:hidden}
+  .fchip .fn{padding:7px 6px 7px 13px;font-size:13px;color:var(--ink);white-space:nowrap;font-weight:600}
+  .fchip .x{padding:7px 11px 7px 4px;font-size:11px;color:var(--muted);cursor:pointer}
+  .fchip .x:hover{color:var(--accent)}
+  .fchip .ct{font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:4px}
   footer a{color:var(--accent);text-decoration:none}
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper);padding:11px 20px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:100;box-shadow:var(--shadow)}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -395,6 +413,17 @@
       <button data-cs="upper" aria-pressed="false">HOA</button>
       <button data-cs="lower" aria-pressed="false">thường</button>
     </div>
+  </div>
+
+  <div class="ctl-row">
+    <span class="lbl">Font đã thêm</span>
+    <div class="chips" id="fontChips"></div>
+  </div>
+  <div class="ctl-row">
+    <span class="lbl">Ghép font</span>
+    <label class="prsel">Title<select id="prTitle"></select></label>
+    <label class="prsel">CTA<select id="prCta"></select></label>
+    <label class="prsel">Text còn lại<select id="prBody"></select></label>
   </div>
 
   <div class="ctl-row">
@@ -610,7 +639,7 @@ const CATALOG=CATALOG_RAW.map(([code,label,en,sk])=>{const S=SCRIPTS[sk]||SCRIPT
   return {code,label,en,needs:S.needs,dir:S.dir||"ltr",sample:S.sample};});
 
 /* ===== state ===== */
-const state={fontQuery:"",langs:["en","vi"],langOn:new Set(["en","vi"]),viewLang:"en",dir:"ltr",selected:["Inter"],tpl:"filter",scale:1,textCase:"none",customFonts:[]};
+const state={fontQuery:"",langs:["en","vi"],langOn:new Set(["en","vi"]),viewLang:"en",dir:"ltr",selected:["Inter"],tpl:"filter",scale:1,textCase:"none",pair:{title:"Inter",cta:"Inter",body:"Inter"},customFonts:[]};
 const loaded=new Set();
 const ALL_LANG=BASE_LANGS.concat(CATALOG);
 
@@ -702,61 +731,62 @@ function doPasteLangs(){const raw=$("#pasteLangs").value;if(!raw.trim()){toast("
 $("#pasteAdd").onclick=doPasteLangs;
 $("#pasteLangs").addEventListener("keydown",e=>{if(e.key==="Enter")doPasteLangs();});
 
-/* ===== stage ===== */
+/* ===== stage: một preview dùng bộ font ghép (Title/CTA/Text) ===== */
+function validPair(){const sel=state.selected;if(!sel.length)return;["title","cta","body"].forEach(r=>{if(!sel.includes(state.pair[r]))state.pair[r]=sel[0];});}
+function roleFonts(){return [["Title",state.pair.title],["CTA",state.pair.cta],["Text",state.pair.body]];}
 function renderStage(){const box=$("#stage");
   if(!state.selected.length){box.innerHTML=`<div class="stage-empty"><b>Chưa có font nào</b>Gõ tên font hoặc dán link Google Fonts ở ô “Thêm font” phía trên để bắt đầu.</div>`;return;}
+  validPair();
   const L=curLang(),B=langBundle(L),dir=L.dir||"ltr";
   const csClass=state.textCase==="upper"?"cs-upper":state.textCase==="lower"?"cs-lower":"";
   const onL=onLangs();
-  box.innerHTML=state.selected.map(name=>{const f=fontObj(name);loadAnyFont(f);
-    let note="";
-    if(f&&f.custom){
-      note=`<div class="demo-note neutral">Font tùy chỉnh — chưa rõ subset. Nhìn trực tiếp: chữ ra ô vuông tức là không hỗ trợ ngôn ngữ đó.</div>`;
-    }else if(f){
-      const pills=onL.map(d=>{const ok=fontSupportsLang(f,d)!==false;
-        return `<span class="lpill ${ok?'ok':'no'}">${ok?'✓':'✕'} ${esc(langName(d))}</span>`;}).join("")||`<span class="lpill no">Chưa chọn ngôn ngữ nào</span>`;
-      const miss=onL.filter(d=>fontSupportsLang(f,d)===false).map(d=>langName(d));
-      const summary=miss.length
-        ? `<div class="note-sum no">⚠ <b>${esc(name)}</b> KHÔNG đáp ứng: <b>${miss.map(esc).join(", ")}</b> — sẽ hiển thị lỗi.</div>`
-        : `<div class="note-sum ok">✓ <b>${esc(name)}</b> đáp ứng đầy đủ ${onL.length} ngôn ngữ đang chọn.</div>`;
-      note=`<div class="demo-note"><div class="lpills">${pills}</div>${summary}</div>`;
-    }
-    const rootStyle=`--head-font:${famStr(name)};--body-font:${famStr(name)};font-size:${16*state.scale}px`;
-    const tpl=(TPL[state.tpl]||tplFilter)(B);
-    return `<div class="demo">
-      <div class="demo-head">
-        <div class="dn">${esc(name)}<span>${f&&f.custom?'Google Fonts':(f?CAT[f.cat]:'')}</span></div>
-        <div class="demo-actions">
-          <button data-act="zoom" data-name="${esc(name)}">⤢ Phóng to</button>
-          <a href="${gfLink(name)}" target="_blank" rel="noopener">↗ Google Fonts</a>
-          <button data-act="copy" data-name="${esc(name)}">⧉ Code</button>
-          <button data-act="remove" data-name="${esc(name)}">✕ Bỏ</button>
-        </div>
-      </div>${note}
-      <div class="demo-body"><div class="mock-root ${csClass}" dir="${dir}" style="${rootStyle}">${tpl}</div></div>
-    </div>`;}).join("");}
+  [state.pair.title,state.pair.cta,state.pair.body].forEach(n=>loadAnyFont(fontObj(n)));
+  /* note: từng vai trò (font) có đáp ứng ngôn ngữ đang chọn không */
+  const seen=new Set();let lines="";
+  roleFonts().forEach(([role,name])=>{const f=fontObj(name);if(!f)return;const key=role+name;if(seen.has(name+role))return;seen.add(name+role);
+    if(f.custom){lines+=`<div class="note-sum neutral">• <b>${esc(role)}</b> — ${esc(name)}: font tùy chỉnh, chưa rõ subset.</div>`;return;}
+    const miss=onL.filter(d=>fontSupportsLang(f,d)===false).map(d=>langName(d));
+    lines+=miss.length
+      ? `<div class="note-sum no">• <b>${esc(role)}</b> — ${esc(name)} KHÔNG đáp ứng: <b>${miss.map(esc).join(", ")}</b></div>`
+      : `<div class="note-sum ok">• <b>${esc(role)}</b> — ${esc(name)} đáp ứng đủ ${onL.length} ngôn ngữ.</div>`;});
+  const note=`<div class="demo-note">${lines||'<span class="vl-hint">Chưa chọn ngôn ngữ.</span>'}</div>`;
+  const rootStyle=`--head-font:${famStr(state.pair.title)};--cta-font:${famStr(state.pair.cta)};--body-font:${famStr(state.pair.body)};font-size:${16*state.scale}px`;
+  const tpl=(TPL[state.tpl]||tplFilter)(B);
+  box.innerHTML=`<div class="demo pair">
+    <div class="demo-head">
+      <div class="dn">🧩 Preview ghép font<span>Title: ${esc(state.pair.title)} · CTA: ${esc(state.pair.cta)} · Text: ${esc(state.pair.body)}</span></div>
+      <div class="demo-actions"><button data-act="zoompair">⤢ Phóng to</button><button data-act="copypair">⧉ Code</button></div>
+    </div>${note}
+    <div class="demo-body"><div class="mock-root ${csClass}" dir="${dir}" style="${rootStyle}">${tpl}</div></div>
+  </div>`;}
 $("#stage").addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)return;
-  if(b.dataset.act==="remove"){state.selected=state.selected.filter(n=>n!==b.dataset.name);renderAll();}
-  else if(b.dataset.act==="zoom"){openZoom(b.dataset.name);}
-  else copyCode(b.dataset.name,b);});
+  if(b.dataset.act==="zoompair"){openZoomPair();}
+  else if(b.dataset.act==="copypair"){copyPair(b);}});
 
 /* ===== phóng to một màn preview ===== */
-let zoomFont=null;
-function openZoom(name){zoomFont=name;$("#zoom").classList.add("open");$("#zoom").setAttribute("aria-hidden","false");document.body.style.overflow="hidden";renderZoom();}
+let zoomFont=null,zoomMode="single";
+function openZoom(name){zoomMode="single";zoomFont=name;$("#zoom").classList.add("open");$("#zoom").setAttribute("aria-hidden","false");document.body.style.overflow="hidden";renderZoom();}
+function openZoomPair(){zoomMode="pair";$("#zoom").classList.add("open");$("#zoom").setAttribute("aria-hidden","false");document.body.style.overflow="hidden";renderZoom();}
 function closeZoom(){$("#zoom").classList.remove("open");$("#zoom").setAttribute("aria-hidden","true");document.body.style.overflow="";}
-function renderZoom(){const name=zoomFont,f=fontObj(name);if(!f)return;loadAnyFont(f);
-  $("#zoomFonts").innerHTML=state.selected.map(n=>`<button class="zf ${n===name?'act':''}" data-zf="${esc(n)}">${esc(n)}</button>`).join("");
+function renderZoom(){const L=curLang(),B=langBundle(L),dir=L.dir||"ltr";
+  const csClass=state.textCase==="upper"?"cs-upper":state.textCase==="lower"?"cs-lower":"";
+  const z=+$("#zoomScale").value/100;let rootStyle;
+  if(zoomMode==="pair"){validPair();const sel=state.selected,opt=cur=>sel.map(n=>`<option value="${esc(n)}"${n===cur?" selected":""}>${esc(n)}</option>`).join("");
+    [state.pair.title,state.pair.cta,state.pair.body].forEach(n=>loadAnyFont(fontObj(n)));
+    $("#zoomFonts").innerHTML=`<label class="zpr">Title<select data-zpr="title">${opt(state.pair.title)}</select></label><label class="zpr">CTA<select data-zpr="cta">${opt(state.pair.cta)}</select></label><label class="zpr">Text<select data-zpr="body">${opt(state.pair.body)}</select></label>`;
+    rootStyle=`--head-font:${famStr(state.pair.title)};--cta-font:${famStr(state.pair.cta)};--body-font:${famStr(state.pair.body)};font-size:16px;zoom:${z}`;
+  }else{const name=zoomFont,f=fontObj(name);if(!f)return;loadAnyFont(f);
+    $("#zoomFonts").innerHTML=state.selected.map(n=>`<button class="zf ${n===name?'act':''}" data-zf="${esc(n)}">${esc(n)}</button>`).join("");
+    rootStyle=`--head-font:${famStr(name)};--body-font:${famStr(name)};font-size:16px;zoom:${z}`;}
   const on=onLangs(),cur=curLang();
   $("#zoomLangs").innerHTML=on.length>1?on.map(d=>`<button class="zl ${d.code===cur.code?'act':''}" data-zl="${d.code}">${esc(langName(d))}</button>`).join(""):"";
-  const L=cur,B=langBundle(L),dir=L.dir||"ltr";
-  const csClass=state.textCase==="upper"?"cs-upper":state.textCase==="lower"?"cs-lower":"";
-  const z=+$("#zoomScale").value/100;
-  const rootStyle=`--head-font:${famStr(name)};--body-font:${famStr(name)};font-size:16px;zoom:${z}`;
   $("#zoomStage").innerHTML=`<div class="mock-root ${csClass}" dir="${dir}" style="${rootStyle}">${(TPL[state.tpl]||tplFilter)(B)}</div>`;}
 $("#zoomClose").onclick=closeZoom;
 $("#zoom").addEventListener("click",e=>{if(e.target.id==="zoom"){closeZoom();return;}
   const zf=e.target.closest("[data-zf]");if(zf){zoomFont=zf.dataset.zf;renderZoom();return;}
   const zl=e.target.closest("[data-zl]");if(zl){state.viewLang=zl.dataset.zl;renderZoom();renderStage();renderViewLangs();}});
+$("#zoom").addEventListener("change",e=>{const s=e.target.closest("select[data-zpr]");if(!s)return;
+  state.pair[s.dataset.zpr]=s.value;renderZoom();buildPairSelects();renderStage();});
 $("#zoomScale").addEventListener("input",e=>{$("#zoomScaleVal").textContent=e.target.value+"%";if($("#zoom").classList.contains("open"))renderZoom();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#zoom").classList.contains("open"))closeZoom();});
 
@@ -910,6 +940,11 @@ function copyCode(name,btn){const f=fontObj(name)||{n:name,w:[400,700],cat:"sans
   const url=`https://fonts.googleapis.com/css2?family=${famParam(f.n)}:wght@${f.w.join(";")}&display=swap`;
   const txt=`<!-- ${f.n} -->\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="${url}" rel="stylesheet">\n\n/* CSS */\nfont-family: '${f.n}', ${FALLBACK[f.cat||'sans']};`;
   navigator.clipboard.writeText(txt).then(()=>{toast(`Đã copy code cho "${f.n}"`);if(btn){const o=btn.textContent;btn.textContent="✓ Đã copy";setTimeout(()=>btn.textContent=o,1400);}});}
+function copyPair(btn){const uniq=[...new Set([state.pair.title,state.pair.cta,state.pair.body])];
+  const links=uniq.map(n=>{const f=fontObj(n)||{n,w:[400,700]};return `<link href="https://fonts.googleapis.com/css2?family=${famParam(n)}:wght@${(f.w||[400,700]).join(";")}&display=swap" rel="stylesheet">`;}).join("\n");
+  const ff=n=>{const f=fontObj(n);return `'${n}', ${f?FALLBACK[f.cat]:'sans-serif'}`;};
+  const txt=`<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n${links}\n\n/* CSS — ghép font */\n--title-font: ${ff(state.pair.title)};\n--cta-font: ${ff(state.pair.cta)};\n--body-font: ${ff(state.pair.body)};`;
+  navigator.clipboard.writeText(txt).then(()=>{toast("Đã copy code bộ font ghép");if(btn){const o=btn.textContent;btn.textContent="✓ Đã copy";setTimeout(()=>btn.textContent=o,1400);}});}
 
 /* ===== controls ===== */
 $("#tplSel").onchange=e=>{state.tpl=e.target.value;renderStage();};
@@ -942,7 +977,22 @@ $("#viewLangs").addEventListener("click",e=>{const b=e.target.closest("[data-vl]
   state.viewLang=b.dataset.vl;renderStage();renderViewLangs();
   if($("#zoom").classList.contains("open"))renderZoom();});
 
-function renderAll(){buildLangChips();renderLangStatus();renderViewLangs();renderStage();}
+/* ===== palette font đã thêm + ghép font (điều khiển chung) ===== */
+function renderFontChips(){const el=$("#fontChips");if(!el)return;
+  el.innerHTML=state.selected.map(n=>{const f=fontObj(n);
+    return `<span class="fchip"><span class="fn">${esc(n)}<span class="ct">${f&&f.custom?'link':(f?CAT[f.cat]:'')}</span></span><span class="x" data-rmf="${esc(n)}" title="Xóa khỏi bộ font">✕</span></span>`;}).join("")
+    ||`<span class="vl-hint">Chưa có font — thêm ở ô trên.</span>`;}
+$("#fontChips").addEventListener("click",e=>{const x=e.target.closest("[data-rmf]");if(!x)return;
+  if(state.selected.length<=1){toast("Cần ít nhất 1 font");return;}
+  state.selected=state.selected.filter(n=>n!==x.dataset.rmf);validPair();renderAll();});
+function buildPairSelects(){validPair();const sel=state.selected;
+  const opt=cur=>sel.map(n=>`<option value="${esc(n)}"${n===cur?" selected":""}>${esc(n)}</option>`).join("");
+  $("#prTitle").innerHTML=opt(state.pair.title);$("#prCta").innerHTML=opt(state.pair.cta);$("#prBody").innerHTML=opt(state.pair.body);}
+$("#prTitle").onchange=e=>{state.pair.title=e.target.value;renderStage();};
+$("#prCta").onchange=e=>{state.pair.cta=e.target.value;renderStage();};
+$("#prBody").onchange=e=>{state.pair.body=e.target.value;renderStage();};
+
+function renderAll(){renderFontChips();buildPairSelects();buildLangChips();renderLangStatus();renderViewLangs();renderStage();}
 
 /* ===== init ===== */
 loadAnyFont(fontObj("Inter"));
